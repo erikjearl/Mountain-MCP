@@ -1,0 +1,78 @@
+<div class="main-content-container">
+<div class="container-fluid">
+<div id="flash-message"/>
+<script>
+        $.ajax({
+            type:'GET',
+            url:'/ajax/public/flash/messages',
+            success:function(data) {
+                $("#flash-message").html(data);
+            },
+            cache: false,
+            error: function (msg) {
+                console.log(msg);
+                var errors = msg.responseJSON;
+            }
+        });
+    </script>
+<script>
+    // if in an iframe, we're probably in some admin or admin-like tool, or a widget.  don't show some messaging
+    // we want to do this here (not document ready) which would cause a highly visible page reflow
+    if (inIframe()) {
+        $(".page-improvement-message").hide();
+    }
+
+    function hideImprovementMessage()
+    {
+        setCookie
+    }
+</script>
+<div id="route-stats">
+<div class="row pt-main-content">
+<div class="col-xs-12">
+<div class="mb-half small text-warm">
+<a href="https://www.mountainproject.com/route-guide">All Locations</a>  &gt;     
+            <a href="https://www.mountainproject.com/area/105708959/california">California</a>
+        
+             &gt; <a href="https://www.mountainproject.com/area/105790243/san-diego-county">San Diego County</a>
+        
+             &gt; <a href="https://www.mountainproject.com/area/111860940/south-san-diego-county">S San Diego County</a>
+        
+             &gt; <a href="https://www.mountainproject.com/area/105790250/mission-gorge">Mission Gorge</a>
+        
+             &gt; <a href="https://www.mountainproject.com/area/105790295/main-wall">Main Wall</a>
+        
+             &gt; <a href="https://www.mountainproject.com/route/126649895/high-anxiety">High Anxiety            (<span class="rateYDS">5.11a</span> <span class="rateFrench">6c</span> <span class="rateEwbanks">22</span> <span class="rateUIAA">VII+</span> <span class="rateZA">22</span> <span class="rateBritish">E3 5c</span>)</a>
+</div>
+<h1>
+            Statistics for 
+        High Anxiety
+        </h1>
+<h2 class="inline-block mr-2"><span class="rateYDS">5.11a <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">YDS</span></a></span> <span class="rateFrench">6c <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">French</span></a></span> <span class="rateEwbanks">22 <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">Ewbanks</span></a></span> <span class="rateUIAA">VII+ <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">UIAA</span></a></span> <span class="rateZA">22 <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">ZA</span></a></span> <span class="rateBritish">E3 5c <a href="https://www.mountainproject.com/international-climbing-grades" class="font-body"><span class="small">British</span></a></span></h2>
+<br class="hidden-sm-up"/>
+<span id="route-star-avg">
+<span>
+<a class="show-tooltip" title="" href="https://www.mountainproject.com/route/stats/126649895/high-anxiety" data-original-title="View Stats">
+<span id="starsWithAvgText-126649895">
+<span class="scoreStars">
+<img src="/img/stars/starBlue.svg" alt=""/>
+<img src="/img/stars/starBlue.svg" alt=""/>
+</span>
+
+
+     Avg: 2 from 1
+    vote
+</span>
+</a>
+</span>
+</span>
+</div>
+</div>
+<div class="row">
+</div>
+<link href="/dist/stats-table/block.css?v.3" rel="stylesheet"/>
+<script src="/dist/stats-table/block.js?v.3"/>
+<div class="onx-stats-table" data-props="{&quot;routeId&quot;:&quot;126649895&quot;,&quot;isAdmin&quot;:false}"><div class="row"><div class="col-lg-2 col-sm-4 col-xs-12 mt-2 max-height max-height-md-1000 max-height-xs-400"><div><h3>Star Ratings </h3><span class="MuiCircularProgress-root MuiCircularProgress-indeterminate MuiCircularProgress-colorPrimary css-z01bqi" role="progressbar" style="width: 1.5rem; height: 1.5rem;"><svg class="MuiCircularProgress-svg css-13o7eu2" viewbox="22 22 44 44"><circle class="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate css-14891ef" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"/></svg></span><table class="table table-striped"><tbody/></table></div></div><div class="col-lg-2 col-sm-4 col-xs-12 mt-2 max-height max-height-md-1000 max-height-xs-400"><div style="max-height: none;"><h3>Suggested Ratings <span class="small text-muted">1</span></h3><table class="table table-striped"><tbody><tr id="ratings.2588178"><td><a href="/user/201430656">erik e</a></td><td>5.11a</td></tr></tbody></table></div></div><div class="col-lg-2 col-sm-4 col-xs-12 mt-2 max-height max-height-md-1000 max-height-xs-400"><div style="max-height: none;"><h3>On To-Do Lists <span class="small text-muted">2</span></h3><table class="table table-striped"><tbody><tr><td><a href="/user/201907301">Joshua G</a></td></tr><tr><td><a href="/user/201981794">Anonymous</a></td></tr></tbody></table></div></div><div class="col-lg-6 col-sm-12 col-xs-12 mt-2 max-height max-height-md-1000 max-height-xs-400"><div style="max-height: none;"><h3>Ticks <span class="small text-muted">2</span></h3><table class="table table-striped"><tbody><tr id="ticks.126702174"><td class="text-nowrap"><a href="/user/106382949">Ramon Thomson</a></td><td><div class="small"><div><strong>Aug 12, 2024</strong> ·  Lead. </div></div></td></tr><tr id="ticks.126649904"><td class="text-nowrap"><a href="/user/201430656">erik e</a></td><td><div class="small"><div><strong>Aug 2, 2024</strong> ·  TR. Hung a few times getting over the bulge at the start then a decent ledge to some cool layback moves</div></div></td></tr></tbody></table></div></div></div></div>
+</div>
+</div>
+</div>
