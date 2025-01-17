@@ -1,0 +1,15 @@
+MTN PROJECT STATS WEBSITE
+
+select crag // input crag id
+    button: collect crag data
+        -> writes/rewrites entire crag database with all ticks  ... (progress bar on screen)
+        stores list of ticks
+        stores list of 'failed_urls'
+            button: retry_failed_urls
+                store updated list of 'failed_urls'
+
+    crag info display:
+        date climbed last
+        who climbed last
+        route climbed last
+        recent ticks

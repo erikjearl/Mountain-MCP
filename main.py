@@ -8,8 +8,10 @@ from failed_routes import handle_failed_routes
 MISSION_GORGE = 105790250
 ATLANTIS = 105792118
 PIMA_CANYON = 106671948
+EL_CAJON_MTN = 105793290
+MC_DOWELL = 105787825
 
-crag_id = PIMA_CANYON
+crag_id = MC_DOWELL
 csv_file = f"ticks_{crag_id}.csv"
 SLEEP_TIME = 10
 all_ticks = []
@@ -60,7 +62,8 @@ if failed_urls:
         print(f"  {failed_url}")
     
     print("\nRetrying failed URLs...")
-    failed_urls = handle_failed_routes(failed_urls, csv_file, sleep_time=SLEEP_TIME)
+    time.sleep(SLEEP_TIME)
+    failed_urls = handle_failed_routes(failed_urls, csv_file, sleep_time=(SLEEP_TIME * 2))
     
     if failed_urls:
         print("\nStill failing URLs")

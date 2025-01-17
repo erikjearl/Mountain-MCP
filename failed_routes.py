@@ -1,9 +1,8 @@
 import csv
 import time
-from get_routes import get_routes
 from get_ticks import get_ticks
 
-def handle_failed_routes(failed_urls, csv_file, max_retries=3, sleep_time=10):
+def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
     """
     Given a list of failed route URLs, re-scrape them and append to the given CSV file.
     Returns a list of any URLs that are still failing after this process.
