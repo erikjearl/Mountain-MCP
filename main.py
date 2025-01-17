@@ -6,8 +6,9 @@ from get_ticks import get_ticks
 # CRAG IDS
 MISSION_GORGE = 105790250
 ATLANTIS = 105792118
+PIMA_CANYON = 106671948
 
-crag_id = ATLANTIS
+crag_id = MISSION_GORGE
 csv_file = f"ticks_{crag_id}.csv"
 SLEEP_TIME = 10
 all_ticks = []

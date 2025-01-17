@@ -30,7 +30,7 @@ def parse_ticks_direct(html_str, route_name):
             break
 
     if not ticks_table:
-        print("    Could not find any table with <tr> id='ticks.'")
+        print("    Error: could not find any table with <tr> id='ticks.'")
         return
 
     rows = ticks_table.find_all("tr", id=lambda x: x and x.startswith("ticks."))

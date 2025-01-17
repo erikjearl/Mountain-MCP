@@ -66,17 +66,32 @@ def get_all_pages(base_url):
 
 
 def get_routes(id):
-    print(f"    Scraping routes for crag ID: {id}")
-    base_url = (
+    print(f"  Scraping routes for crag ID: {id}")
+    print("    routes...")
+    rock_urls = (
         "https://www.mountainproject.com/route-finder"
         "?selectedIds="+str(id)+
         "&type=rock"
         "&stars=0&diffMinrock=800&diffMaxrock=12400"
     )
-    all_links = get_all_pages(base_url)
+    rock_links = get_all_pages(rock_urls)
+    print(f"Found {len(rock_links)} rocks.\n")
+
+    print("    boulders...")
+    boulder_urls = (
+        "https://www.mountainproject.com/route-finder"
+        "?selectedIds="+str(id)+
+        "&type=boulder"
+        "&stars=0&diffMinboulder=20000&diffMaxboulder=21700"
+    )
+    boulder_links = get_all_pages(boulder_urls)
+    print(f"Found {len(boulder_links)} boulders.\n")
+
+    all_links = rock_links + boulder_links
     return all_links
 
 if __name__ == '__main__':
     id = 105790250
+    id = 106671948
     all_links = get_routes(id)
     print(f"\nFound {len(all_links)} total route links:")
