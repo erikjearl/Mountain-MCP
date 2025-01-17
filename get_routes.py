@@ -22,6 +22,7 @@ def get_route_urls(page_url):
             else:
                 full_url = href
 
+            full_url = full_url.replace("/route/", "/route/stats/")
             route_urls.append(full_url)
 
     return list(set(route_urls))  # deduplicate before returning
@@ -59,7 +60,7 @@ def get_all_pages(base_url):
         # Move on to the next page
         page_num += 1
 
-        # (Optional) small delay to be polite to the server
+        # small delay to be polite to the server
         time.sleep(1)
 
     return sorted(all_route_urls)
@@ -67,7 +68,8 @@ def get_all_pages(base_url):
 
 def get_routes(id):
     print(f"  Scraping routes for crag ID: {id}")
-    print("    routes...")
+    
+    # find rock climbing routes
     rock_urls = (
         "https://www.mountainproject.com/route-finder"
         "?selectedIds="+str(id)+
@@ -75,9 +77,9 @@ def get_routes(id):
         "&stars=0&diffMinrock=800&diffMaxrock=12400"
     )
     rock_links = get_all_pages(rock_urls)
-    print(f"Found {len(rock_links)} rocks.\n")
+    print(f"Found {len(rock_links)} rock climbs.\n")
 
-    print("    boulders...")
+    # find boulders
     boulder_urls = (
         "https://www.mountainproject.com/route-finder"
         "?selectedIds="+str(id)+
@@ -90,8 +92,9 @@ def get_routes(id):
     all_links = rock_links + boulder_links
     return all_links
 
+
 if __name__ == '__main__':
     id = 105790250
     id = 106671948
     all_links = get_routes(id)
-    print(f"\nFound {len(all_links)} total route links:")
+    print(f"\nREPORT: Found {len(all_links)} total route links")
