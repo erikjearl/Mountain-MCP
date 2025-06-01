@@ -5,17 +5,26 @@ from get_ticks import get_ticks
 from failed_routes import handle_failed_routes
 
 # CRAG IDS
-MISSION_GORGE = 105790250
-SANTEE_BOULDERS = 105915801
-EL_CAJON_MTN = 105793290
-JTREE_HVCG = 105720573
-ARIZONA = 105708962
-ATLANTIS = 105792118
-MC_DOWELLS = 105787825
-PIMA_CANYON = 106671948
+CRAGS = {
+    "MISSION_GORGE": 105790250,
+    "SANTEE_BOULDERS": 105915801,
+    "EL_CAJON_MTN": 105793290,
+    "JTREE_HVCG": 105720573,
+    "ARIZONA": 105708962,
+    "ATLANTIS": 105792118,
+    "MC_DOWELLS": 105787825,
+    "PIMA_CANYON": 106671948,
+    "BLACK_MOUNTAIN": 105991127,
+    "TAHQUITZ": 105788031,
+    "SUICIDE_ROCK": 105788036
+}
 
-crag_id = SANTEE_BOULDERS
-csv_file = f"ticks_{crag_id}.csv"
+# Select the crag
+crag_name = "TAHQUITZ"
+crag_id = CRAGS[crag_name]
+csv_file = f"ticks_{crag_name}.csv"
+
+
 SLEEP_TIME = 10
 all_ticks = []
 failed_urls = []
