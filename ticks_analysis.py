@@ -56,7 +56,7 @@ def analyze_top_climbs(file, top_n=10, start_date=None, end_date=None, group_by=
 
 
 ### ~~ USAGE ~~ ###
-file = "ticks/ticks_TAHQUITZ.csv"
+file = "ticks/ticks_MT_WOODSON.csv"
 
 top_n = 20
 start_date = "2025-01-01"

@@ -5,17 +5,19 @@ from requests_html import HTMLSession
 
 # get 'main-content-container' from html
 def get_onx_stat_table_requests_html(url):
-    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     session = HTMLSession()
-    r = session.get(url)
-    r.html.render(timeout=30)
-
-    main_content_div = r.html.find("div.main-content-container", first=True)
-    if main_content_div:
-        
-        return main_content_div.html
-    else:
+    try:
+        r = session.get(url)
+        r.html.render(timeout=30)
+        main_content_div = r.html.find("div.main-content-container", first=True)
+        if main_content_div:
+            return main_content_div.html
         return None
+    finally:
+        session.close()
+        loop.close()
 
 from bs4 import BeautifulSoup
 
