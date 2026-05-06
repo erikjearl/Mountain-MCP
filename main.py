@@ -25,7 +25,7 @@ CRAGS = {
 # Select the crag
 crag_name = "JTREE_HV"
 crag_id = CRAGS[crag_name]
-csv_file = f"ticks_{crag_name}.csv"
+csv_file = f"ticks/ticks_{crag_name}.csv"
 
 
 SLEEP_TIME = 10
