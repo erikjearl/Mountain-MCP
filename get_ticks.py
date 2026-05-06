@@ -1,9 +1,11 @@
+import asyncio
 import csv
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
 # get 'main-content-container' from html
 def get_onx_stat_table_requests_html(url):
+    asyncio.set_event_loop(asyncio.new_event_loop())
     session = HTMLSession()
     r = session.get(url)
     r.html.render(timeout=30)
