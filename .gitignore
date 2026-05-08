@@ -1,6 +1,7 @@
 .DS_Store
 */sheets/
 */ticks/
-ticks/
 __pycache__/
 /.claude
+ticks/
+routes/
