@@ -1,8 +1,10 @@
 import csv
 import gc
+import os
 import time
 from get_routes import get_routes
 from get_ticks import get_ticks
+from get_route_info import get_route_info
 from failed_routes import handle_failed_routes
 
 # CRAG IDS
@@ -37,26 +39,48 @@ CRAGS = {
 }
 
 # Select the crag
-crag_name = "JTREE_CENTRAL"
+crag_name = "MISSION_GORGE"
 crag_id = CRAGS[crag_name]
-csv_file = f"ticks/ticks_{crag_name}.csv"
+ticks_csv_file = f"ticks/ticks_{crag_name}.csv"
+routes_csv_file = f"routes/routes_{crag_name}.csv"
+areas_csv_file = f"routes/areas_{crag_name}.csv"
 
+os.makedirs("routes", exist_ok=True)
 
 SLEEP_TIME = 10
 failed_urls = []
 total_ticks = 0
+total_routes = 0
+areas_seen = {}  # area_id -> (area_id, name, parent_id, full_path)
 
 # get all routes in the crag
 route_urls = get_routes(crag_id)
 print(f"Found {len(route_urls)} routes.\n")
 
-# get ticks from routes, writing incrementally to avoid holding everything in memory
-with open(csv_file, "w", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Route", "Name", "Date", "Details"])
+# get route info and ticks, writing incrementally to avoid holding everything in memory
+with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
+     open(routes_csv_file, "w", newline="", encoding="utf-8") as routes_f:
+
+    ticks_writer = csv.writer(ticks_f)
+    ticks_writer.writerow(["Route", "Name", "Date", "Details"])
+
+    routes_writer = csv.writer(routes_f)
+    routes_writer.writerow(["Route", "Name", "Grade", "Type", "Length", "AreaID"])
 
     for i, url in enumerate(route_urls):
-        print(f"Scraping ticks for route {i+1}/{len(route_urls)}: {url}")
+        print(f"Scraping route {i+1}/{len(route_urls)}: {url}")
+
+        # Fetch route metadata (plain requests, no JS needed)
+        try:
+            route_row, areas = get_route_info(url)
+            routes_writer.writerow(route_row)
+            total_routes += 1
+            for area in areas:
+                areas_seen.setdefault(area[0], area)
+        except Exception as e:
+            print(f"  -Route info failed: {e}")
+
+        # Fetch ticks (JS-rendered stats page)
         max_retries = 3
         attempt = 1
         ticks = None
@@ -68,21 +92,30 @@ with open(csv_file, "w", newline="", encoding="utf-8") as f:
                     break
 
             except Exception as e:
-                print(f"-Attempt {attempt} failed with error: {e}")
+                print(f"  -Attempt {attempt} failed with error: {e}")
 
             time.sleep(SLEEP_TIME)
             attempt += 1
 
         if ticks is None:
-            print(f"-ERROR! SKIPPING ROUTE: {url}")
+            print(f"  -ERROR! SKIPPING TICKS: {url}")
             failed_urls.append(url)
             continue
 
-        writer.writerows(ticks)
+        ticks_writer.writerows(ticks)
         total_ticks += len(ticks)
         gc.collect()
 
-print(f"Wrote {total_ticks} rows to {csv_file}.")
+print(f"Wrote {total_routes} rows to {routes_csv_file}.")
+print(f"Wrote {total_ticks} rows to {ticks_csv_file}.")
+
+# Write areas CSV — collected across all routes, deduplicated by area_id
+with open(areas_csv_file, "w", newline="", encoding="utf-8") as areas_f:
+    areas_writer = csv.writer(areas_f)
+    areas_writer.writerow(["AreaID", "Name", "ParentID", "FullPath"])
+    for area in areas_seen.values():
+        areas_writer.writerow(area)
+print(f"Wrote {len(areas_seen)} rows to {areas_csv_file}.")
 
 
 ## HANDLE FAILED URLS
@@ -93,7 +126,7 @@ if failed_urls:
     
     print("\nRetrying failed URLs...")
     time.sleep(SLEEP_TIME)
-    failed_urls = handle_failed_routes(failed_urls, csv_file, sleep_time=(SLEEP_TIME * 2))
+    failed_urls = handle_failed_routes(failed_urls, ticks_csv_file, sleep_time=(SLEEP_TIME * 2))
     
     if failed_urls:
         print("\nStill failing URLs")
