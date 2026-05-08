@@ -2,8 +2,7 @@ from requests_html import HTMLSession
 
 def get_onx_stat_table_requests_html(url):
     session = HTMLSession()
-    r = session.get(url)
-    # Increase the timeout and wait for more JS to load
+    r = session.get(url, timeout=30)
     r.html.render(timeout=30)
 
     # Find the first div with the class "main-content-container"

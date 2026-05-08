@@ -9,7 +9,7 @@ def get_onx_stat_table_requests_html(url):
     asyncio.set_event_loop(loop)
     session = HTMLSession()
     try:
-        r = session.get(url)
+        r = session.get(url, timeout=30)
         r.html.render(timeout=30)
         main_content_div = r.html.find("div.main-content-container", first=True)
         if main_content_div:
@@ -19,7 +19,6 @@ def get_onx_stat_table_requests_html(url):
         session.close()
         loop.close()
 
-from bs4 import BeautifulSoup
 
 def parse_ticks_direct(html_str, route_name):
     """

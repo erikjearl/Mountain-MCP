@@ -6,7 +6,7 @@ def get_route_urls(page_url):
     """
     Returns all /route/ links found on the given page URL.
     """
-    response = requests.get(page_url)
+    response = requests.get(page_url, timeout=30)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')

@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     files = sys.argv[1:]
     top_n = 20
-    start_date = "2025-01-01"
+    start_date = "2026-01-01"
     end_date = None
 
     analyze_top_climbs(files, top_n, start_date, end_date, group_by="route")
