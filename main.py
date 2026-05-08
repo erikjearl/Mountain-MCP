@@ -2,6 +2,7 @@ import csv
 import gc
 import os
 import time
+from datetime import datetime
 from get_routes import get_routes
 from get_ticks import get_ticks
 from get_route_info import get_route_info
@@ -41,14 +42,16 @@ CRAGS = {
 # Select the crag
 crag_name = "MISSION_GORGE"
 crag_id = CRAGS[crag_name]
-ticks_csv_file = f"ticks/ticks_{crag_name}.csv"
-routes_csv_file = f"routes/routes_{crag_name}.csv"
-areas_csv_file = f"routes/areas_{crag_name}.csv"
+date_stamp = datetime.now().strftime("%Y%m%d")
+ticks_csv_file = f"ticks/ticks_{crag_name}_{date_stamp}.csv"
+routes_csv_file = f"routes/routes_{crag_name}_{date_stamp}.csv"
+areas_csv_file = f"routes/areas_{crag_name}_{date_stamp}.csv"
 
 os.makedirs("routes", exist_ok=True)
 
 SLEEP_TIME = 10
 failed_urls = []
+failed_route_info_urls = []
 total_ticks = 0
 total_routes = 0
 areas_seen = {}  # area_id -> (area_id, name, parent_id, full_path)
@@ -71,14 +74,25 @@ with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
         print(f"Scraping route {i+1}/{len(route_urls)}: {url}")
 
         # Fetch route metadata (plain requests, no JS needed)
-        try:
-            route_row, areas = get_route_info(url)
-            routes_writer.writerow(route_row)
-            total_routes += 1
-            for area in areas:
-                areas_seen.setdefault(area[0], area)
-        except Exception as e:
-            print(f"  -Route info failed: {e}")
+        route_info_attempt = 1
+        route_info_max_retries = 3
+        while route_info_attempt <= route_info_max_retries:
+            try:
+                route_row, areas = get_route_info(url)
+                routes_writer.writerow(route_row)
+                routes_f.flush()
+                total_routes += 1
+                for area in areas:
+                    areas_seen.setdefault(area[0], area)
+                break
+            except Exception as e:
+                print(f"  -Route info attempt {route_info_attempt} failed: {e}")
+                if route_info_attempt < route_info_max_retries:
+                    time.sleep(5)
+                else:
+                    print(f"  -ERROR! Giving up on route info: {url}")
+                    failed_route_info_urls.append(url)
+            route_info_attempt += 1
 
         # Fetch ticks (JS-rendered stats page)
         max_retries = 3
@@ -137,3 +151,10 @@ if failed_urls:
 
 else:
     print("\nNo URLs failed")
+
+if failed_route_info_urls:
+    print("\nRoutes with missing info (route page could not be scraped):")
+    for url in failed_route_info_urls:
+        print(f"  {url}")
+else:
+    print("\nAll route info scraped successfully.")
