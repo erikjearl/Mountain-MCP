@@ -1,5 +1,4 @@
 import asyncio
-import csv
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
@@ -10,7 +9,7 @@ def get_onx_stat_table_requests_html(url):
     session = HTMLSession()
     try:
         r = session.get(url, timeout=30)
-        r.html.render(timeout=30)
+        r.html.render(timeout=30, sleep=2)
         main_content_div = r.html.find("div.main-content-container", first=True)
         if main_content_div:
             return main_content_div.html
@@ -87,6 +86,9 @@ def parse_ticks_direct(html_str, route_name):
 def get_ticks(url):
     print(f"    Parsing Route: {url}")
     html_string = get_onx_stat_table_requests_html(url)
+    if html_string is None:
+        print(f"    ERROR: Could not render page for {url.rsplit('/', 1)[-1]}")
+        return None
     route_name = url.rsplit('/', 1)[-1]
     ticks = parse_ticks_direct(html_string, route_name)
     return ticks
