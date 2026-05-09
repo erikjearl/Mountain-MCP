@@ -1,152 +1,197 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## What this project does
 
-Scrapes Mountain Project (mountainproject.com) to collect **ticks** — records of individual climbers ascending specific routes — and stores them in CSVs for analysis. A tick captures: climber name, date, and details (style + pitch count + free-text notes).
-
-## Dependencies
-
-`requests_html` renders JavaScript via **pyppeteer** (headless Chromium). On a fresh environment, pyppeteer will auto-download Chromium on first run — this can take a few minutes and requires network access. Both `pyppeteer` and `playwright` are installed.
-
-```bash
-pip install requests beautifulsoup4 requests-html
-```
+Scrapes Mountain Project (mountainproject.com) to collect **ticks** — records of individual climbers ascending specific routes — and stores them as CSVs. An MCP server then exposes the data to AI assistants via structured tools.
 
 ## Project structure
 
 ```
-mtn-scraper/   ← scraper code, tools, archive
-mtn-data/      ← all collected CSV data (written by scraper, read by tools/bot)
-  ticks/
-  routes/
-    areas/
+mtn-scraper/          ← Python scraper (headless Chromium, BS4)
+  main.py             ← orchestrator: resolves crag, runs pipeline, writes CSVs
+  get_routes.py       ← stage 1: discover route stats URLs from crag ID
+  get_route_info.py   ← stage 2: fetch route metadata (name, grade, type, areas)
+  get_ticks.py        ← stage 3: JS-render stats pages, parse tick rows
+  failed_routes.py    ← second-pass retry for URLs that failed in main loop
+  requirements.txt
+  Dockerfile / .dockerignore
+  tools/
+    ticks_analysis.py ← standalone CLI: top routes + climbers from CSVs
+  archive/            ← debug HTML snapshots, prototype scripts
+  deployments/        ← Kubernetes Job YAML files (one per crag)
+
+mtn-data/             ← CSV data written by scraper, read by MCP server
+  ticks/              ← ticks_<CRAG>_<YYYYMMDD>.csv
+  routes/             ← routes_<CRAG>_<YYYYMMDD>.csv
+    areas/            ← areas_<CRAG>_<YYYYMMDD>.csv
+  data-context.md     ← full CSV schemas, join model, data caveats (read before touching data)
+
+mtn-mcp/              ← MCP server (TypeScript/Node.js)
+  src/
+    index.ts          ← server entry: registers tools + resources, stdio transport
+    data-loader.ts    ← CSV loaders, grade utilities (ydsToNum, vGradeToNum), parseStyle
+    tools/
+      ticks.ts        ← climber_profile, top_routes
+      routes.ts       ← crag_overview, area_breakdown, route_info, find_routes, list_crags
+      beta.ts         ← route_beta (mines tick freetext for gear/conditions/notes)
+      gear.ts         ← suggest_gear (heuristic cam rack for trad routes)
+  dist/               ← compiled JS output (not committed)
+  rock_climbing_context.md  ← climbing domain knowledge (grades, gear, disciplines)
+  .mcp.json           ← Claude Code MCP registration
 ```
 
-The MCP bot section (`mtn-mp-bot/`) is planned but not yet created.
+## Context files — read these before working on each sub-project
 
-## Running the scraper
+- `mtn-data/data-context.md` — CSV schemas, join model, Mountain Project URL structure, data caveats. Critical when working on any data layer or MCP tool.
+- `mtn-mcp/rock_climbing_context.md` — climbing domain: YDS/V-scale grades, tick styles, crack sizes, cam sizing tables. Critical when working on any AI-facing feature.
+
+---
+
+## mtn-scraper
+
+### Dependencies
+
+```bash
+pip install -r requirements.txt
+# requirements.txt pins: requests, beautifulsoup4, requests-html, pyppeteer
+```
+
+`requests_html` drives headless Chromium via pyppeteer. On a fresh environment, pyppeteer downloads Chromium on first run (requires network). The Docker image pre-bakes Chromium at build time.
+
+### Running locally
+
+Set `HARD_CODE_CRAG` in `main.py` to the key you want, then:
 
 ```bash
 cd mtn-scraper
-# Edit main.py to set crag_name to the desired key from the CRAGS dict, then:
 python main.py
 ```
 
-Output is written to three timestamped CSV files per run:
+Or use environment variables instead of editing the file:
+
+```bash
+# Named crag (must exist in the CRAGS dict in main.py)
+CRAG_NAME=TAHQUITZ python main.py
+
+# Arbitrary crag not in the dict — supply both vars
+CRAG_NAME=YOSEMITE CRAG_ID=105833381 python main.py
+
+# Override data output directory (default: ../mtn-data)
+MTN_DATA_DIR=/some/other/path CRAG_NAME=TAHQUITZ python main.py
+```
+
+Output is three timestamped CSVs per run:
 - `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
 - `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`
 - `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`
 
-The scraper paginates through all routes at the crag, fetches route metadata from the route page, renders each JavaScript-heavy stats page with `requests_html` for ticks, and retries failures automatically.
+Exits with code 1 if any URLs permanently failed (useful for CI/CD detection).
 
-## Analyzing tick data
-
-```bash
-cd mtn-scraper
-python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_20260507.csv
-python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_20260507.csv ../mtn-data/ticks/ticks_MALIBU_CREEK_20260507.csv   # multiple files
-```
-
-Prints top 20 routes and top 20 climbers by tick count + pitch count. Edit `start_date`/`end_date` and `top_n` directly in the `if __name__ == "__main__"` block.
-
-Set `routes_file` in the `if __name__` block to the matching `../mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv` to show full route names and grades in the output instead of URL slugs. Leave it as `None` to use slug-only output (original behavior).
-
-**Note:** `ticks_analysis.py` only reads ticks (and optionally routes). The areas CSV enables further grouping by wall/sub-area — see **What the data can answer** below.
-
-## Scraping a single route (for debugging)
+### Running with Docker
 
 ```bash
 cd mtn-scraper
-python get_ticks.py       # renders the stats page for the hardcoded URL, prints tick count
-python get_route_info.py  # fetches the route page for two hardcoded URLs, prints parsed fields
-python archive/stats_table.py  # renders a stats page and saves raw HTML to archive/html/content.html
+docker build -t mtn-scraper .
+docker run -e CRAG_NAME=TAHQUITZ -v /path/to/mtn-data:/mtn-proj-data mtn-scraper
 ```
 
-To test a different URL, edit the hardcoded URL in the `if __name__ == '__main__'` block at the bottom of whichever file you're running.
+The image pre-downloads Chromium at build time. `MTN_DATA_DIR` defaults to `/mtn-proj-data` inside the container — mount your data volume there.
 
-`archive/html/` contains saved debug HTML snapshots (`content.html`, `onx-stats.table.html`) — these are artifacts from `stats_table.py` runs, not source files.
+### Kubernetes
 
-**`archive/test.py` is a prototype, not a test suite.** It uses plain `requests` with no JS rendering. It will silently return empty results on most routes because Mountain Project stats pages require JavaScript to populate the tick table. Do not use it to validate behavior — use `get_ticks.py` instead.
+`deployments/` contains one Job YAML per crag. Each job runs a single scrape and exits. Data is written to a PVC named `mtn-data-pvc`.
 
-**`failed_routes.py` can be run standalone** to manually retry specific URLs that are still failing after a full run. Uncomment the URLs in its `__main__` block and set `csv_file` to the target ticks CSV, then run `python failed_routes.py`. It appends recovered ticks to the existing CSV without overwriting it.
+```bash
+kubectl apply -f mtn-scraper/deployments/job-tahquitz.yaml
+```
 
-## Rate limiting
+To scrape a crag not in the pre-made YAMLs, copy any job file and set `CRAG_NAME` (+ `CRAG_ID` if needed) in the env section.
 
-`SLEEP_TIME` (set in `main.py`) controls the sleep between tick-scrape attempts. Mountain Project will throttle or block aggressive scrapers. The failed-URL retry pass uses `SLEEP_TIME * 2` for the same reason. Route info fetches (plain HTTP, no JS) use a separate 5s sleep on retry only — they do not sleep on success since the JS rendering of the following ticks fetch provides natural delay.
+### Analyzing tick data (standalone CLI)
 
-## Architecture
+```bash
+cd mtn-scraper
+python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_<DATE>.csv
+python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_<DATE>.csv ../mtn-data/ticks/ticks_MALIBU_CREEK_<DATE>.csv
+```
 
-The scrape pipeline is four stages:
+Prints top 20 routes and top 20 climbers by tick count and pitch count. Edit `start_date`, `end_date`, `top_n`, and `routes_file` directly in the `if __name__ == "__main__"` block at the bottom of the script. Set `routes_file` to the matching routes CSV to resolve slugs to full names.
 
-1. **`get_routes.py`** — Given a crag ID, queries the Mountain Project route-finder twice (once for `type=rock`, once for `type=boulder`) and paginates until no new routes are found. Returns deduplicated `/route/stats/` URLs. Rock and boulder routes use different internal difficulty encodings on Mountain Project.
+### Scraping a single route (debugging)
 
-2. **`get_route_info.py`** — For each stats URL, converts it to the route page URL (`/route/stats/` → `/route/`) and fetches it with plain `requests` (no JS needed — route pages are server-rendered). Parses route name, grade, type, length, and the full area hierarchy from the breadcrumb. Returns a route row tuple and a list of area tuples. See **HTML parsing details** below.
+```bash
+cd mtn-scraper
+python get_ticks.py        # renders stats page for hardcoded URL, prints ticks
+python get_route_info.py   # fetches route page for hardcoded URLs, prints parsed fields
+python archive/stats_table.py  # renders stats page, saves HTML to archive/html/content.html
+```
 
-3. **`get_ticks.py`** — The stats pages are JavaScript-rendered, so `requests_html` drives a headless Chromium to get the DOM. `parse_ticks_direct()` then finds the tick table by looking for `<tr id="ticks.*">` rows and extracts user name, date, and details. See **HTML parsing details** below.
+Edit the hardcoded URL in the `if __name__ == '__main__'` block of whichever file you're running.
 
-4. **`main.py`** — Orchestrates the loop: for each route URL, fetch route info (3 attempts, 5s sleep) then fetch ticks (3 attempts, ~5s sleep). Writes ticks and routes incrementally with `flush()` after each route. Collects areas in a dict (deduplicating by area ID) and writes the areas CSV after the loop. Hands still-failing tick URLs to `failed_routes.py` for a second pass with a longer sleep. Failing route info URLs are logged at the end.
+**`archive/test.py`** uses plain requests with no JS rendering — will silently return empty results on most routes. Use `get_ticks.py` instead.
 
-## Output schemas
+**`failed_routes.py`** can be run standalone to manually retry specific URLs. Uncomment URLs in its `__main__` block and set `csv_file`, then run `python failed_routes.py`. Appends to the existing CSV without overwriting.
 
-Full schemas, join model, and query examples are documented in `mtn-data/data-context.md`.
+### Rate limiting
 
-**Quick reference — three CSVs per crag run:**
-- `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv` → `Route, Name, Date, Details`
-- `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv` → `Route, Name, Grade, Type, Length, AreaID`
-- `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv` → `AreaID, Name, ParentID, FullPath`
+`SLEEP_TIME` in `main.py` controls the sleep between tick-scrape attempts (default: 3s with ±2s jitter). The failed-URL retry pass uses `SLEEP_TIME * 2`. Route info fetches (plain HTTP) don't sleep on success — the JS render of the following ticks fetch provides natural delay.
 
-Join chain: `ticks.Route` → `routes.Route` → `routes.AreaID` → `areas.AreaID`
+### Architecture
 
-## HTML parsing details
+Four pipeline stages:
 
-### Route page (`/route/<id>/<name>`) — `get_route_info.py`
+1. **`get_routes.py`** — Queries the Mountain Project route-finder API twice (rock + boulder) for a crag ID, paginates until no new routes appear, returns deduplicated `/route/stats/` URLs.
 
-Fetched with plain `requests`, no JS rendering required.
+2. **`get_route_info.py`** — Converts stats URL → route URL, fetches with plain `requests` (server-rendered). Parses name, grade, type, length, and the area breadcrumb hierarchy.
 
-**Route name** — `<h1>` first NavigableString child. The `<h1>` also contains a nested `<a>` edit-icon link, so `get_text()` on the whole tag would include "Suggest change". Instead, iterate `h1.children` and take the first `NavigableString`.
+3. **`get_ticks.py`** — JS-renders the stats page with `requests_html` + pyppeteer. Parses `<tr id="ticks.*">` rows, extracts username, date, and the details div.
 
-**Grade** — `<span class="rateYDS">` for rock/trad/sport routes, `<span class="rateHueco">` for boulders. Each grade span also contains a nested `<span class="small">` with the system label ("YDS", "Hueco"), so again take only the first NavigableString child rather than calling `get_text()` on the whole span.
+4. **`main.py`** — For each URL: fetch route info (3 attempts), then fetch ticks (3 attempts, jittered sleep). Flushes ticks and routes CSVs after each route. Collects areas in a deduplicating dict, writes the areas CSV after the loop. Hands failing tick URLs to `failed_routes.py` for a second pass.
 
-**Type and Length** — `<table class="description-details">` contains multiple label/value row pairs. Find the row where the first `<td>` contains `"Type:"`. The second `<td>` holds a combined string like `"Trad, 100 ft (30 m)"` or just `"Boulder"`. Parse with:
-- Length: `re.search(r'(\d[\d,]*)\s*ft', type_cell)` → e.g. `100 ft`
-- Type: strip the length portion with `re.sub(r',?\s*\d[\d,]*\s*ft.*', '', type_cell)` → e.g. `Trad`
+### Crag IDs
 
-**Area hierarchy** — `<div class="mb-half small text-warm">` is the breadcrumb. Iterate all `<a href="/area/...">` links in order (skipping the "All Locations" link which goes to `/route-guide`, not `/area/`). For each area link:
-- AreaID: second-to-last path segment of the URL, e.g. `/area/106621111/the-sentinel-west-face` → `106621111`
-- Name: link text
-- ParentID: previous area's ID in the list (empty for first)
-- FullPath: accumulate names joined by ` > `
+Defined in `main.py`'s `CRAGS` dict. To add a new crag, navigate to it on Mountain Project and copy the numeric ID from the URL: `mountainproject.com/area/105790250/mission-gorge` → ID is `105790250`. Add it to `CRAGS` or pass it via `CRAG_ID` env var.
 
-The last area in the list is the route's immediate parent (the wall or sub-area).
+---
 
-### Stats page (`/route/stats/<id>/<name>`) — `get_ticks.py`
+## mtn-mcp
 
-Requires JavaScript rendering — `requests_html` drives headless Chromium via pyppeteer. Renders `div.main-content-container` and returns its HTML.
+TypeScript MCP server that exposes the CSV data via 9 tools and 2 resources over stdio transport.
 
-**Tick count check** — `h3:-soup-contains('Ticks') span.small.text-muted` contains the total tick count. If it parses to `0`, skip table parsing and return `[]`.
+### Build and run
 
-**Tick table** — find all `<table class="table table-striped">` and pick the one that contains a `<tr id="ticks.*">` row. Each such row has two `<td>` cells:
-- Cell 0: username in an `<a>` tag
-- Cell 1: date in a `<strong>` tag; details in a `<div class="small">`
+```bash
+cd mtn-mcp
+npm install
+npm run build        # tsc → dist/
+npm run dev          # tsx (no build needed, for development)
+node dist/index.js   # production
+```
 
-## Crag IDs
+### Claude Code integration
 
-Defined in `main.py`'s `CRAGS` dict. SoCal crags (Tahquitz, Malibu Creek, Mt. Woodson, Mission Gorge, etc.), NorCal Bay Area clusters, Arizona (McDownells, Pima Canyon), and Joshua Tree sectors.
+`.mcp.json` in `mtn-mcp/` registers the server with Claude Code for this project. Restart Claude Code after modifying it. The path in `args` is absolute — update it if the repo moves.
 
-Output CSVs per crag live in:
-- `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
-- `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`
-- `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`
+### Tools (9 total)
 
-To find a new crag's ID: navigate to the area on Mountain Project — the numeric ID is in the URL: `mountainproject.com/area/105790250/mission-gorge` → ID is `105790250`.
+| Tool | Description |
+|---|---|
+| `list_crags` | List all crags that have CSV data in `mtn-data/` |
+| `crag_overview` | Grade distribution, type breakdown, top routes, busiest months, active climbers + walls |
+| `area_breakdown` | All walls/sub-areas ranked by tick count with route count, types, grade range |
+| `route_info` | Grade, type, length, wall location, and tick count for a specific route |
+| `find_routes` | Search routes by grade, type, and/or area name |
+| `route_beta` | Mines all tick freetext for gear mentions, condition/quality keywords, and recent notes |
+| `suggest_gear` | Heuristic cam rack recommendation for a trad route based on grade and length |
+| `climber_profile` | Grade pyramid (sends only), style breakdown, hardest sends, pitch totals, favorite walls. Supports date filtering. |
+| `top_routes` | Most-ticked routes at a crag, with optional type/date filters |
 
-Mountain Project URL structure:
-- Area page: `/area/<id>/<name>`
-- Route page: `/route/<id>/<name>`
-- Stats page (what we scrape): `/route/stats/<id>/<name>`
+### Resources (2 total)
 
-## Planned web UI
+| URI | Content |
+|---|---|
+| `mtn://context/climbing` | `rock_climbing_context.md` — climbing domain knowledge |
+| `mtn://context/data` | `mtn-data/data-context.md` — CSV schemas and data model |
 
-`archive/website.txt` outlines a future web application with: a crag selector by ID, a "collect data" button that runs the full scrape with a progress bar, retry-failed-URLs controls, and a crag dashboard showing most recent tick (who, what route, when). The current scripts are the backend logic for this planned UI.
