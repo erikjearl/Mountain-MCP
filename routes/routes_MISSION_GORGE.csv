@@ -1,0 +1,253 @@
+Route,Name,Grade,Type,Length,AreaID
+knob-job,Knob Job,5.8,TR,30 ft,105790295
+hangmans-climb,Hangman's Climb,5.10a,"Sport, TR",40 ft,105790295
+mariah,Mariah,5.10a,"Trad, TR",60 ft,105790295
+suzies-wild-ride,Suzie's Wild Ride,5.9,Sport,80 ft,105790295
+escapade,Escapade,5.11a,"Sport, TR",80 ft,105790295
+chicken-heart,Chicken Heart,5.10a,Trad,30 ft,105790295
+the-ramp,The Ramp,5.7,"Trad, TR",60 ft,105790307
+the-trauma,The Trauma,5.6,"Trad, TR",70 ft,105790307
+the-tower,The Tower,5.7,"Sport, TR",50 ft,200412107
+turkey-chute,Turkey Chute,5.7,"Trad, TR",45 ft,200412107
+shadowfax,Shadowfax,5.8,"Trad, TR",40 ft,201172980
+exit-stage-left,Exit Stage Left,5.10a,"Trad, TR",30 ft,105790295
+lilleys-delight,Lilley's Delight,5.7,Trad,40 ft,105790295
+easy-rider,Easy Rider,5.7,"Sport, TR",25 ft,201172980
+black-rider,Black Rider,5.11b,"Sport, TR",30 ft,201172980
+morannon,Morannon,5.9,"Trad, TR",25 ft,201172980
+shelobs-lair,Shelob's Lair,5.10b,Trad,30 ft,201172980
+gandalf,Gandalf,5.7,"Trad, TR",25 ft,201172980
+caradhras,Caradhras,5.10a,Trad,55 ft,201172212
+dimrill-stair,Dimrill Stair,5.8,Trad,25 ft,201172223
+sam-i-am,Sam I Am,5.8,Trad,30 ft,201172223
+lord-of-the-rings,Lord of the Rings,5.10c,Sport,25 ft,201172192
+apostrophe,Apostrophe,5.9,"Trad, TR",45 ft,200412098
+the-stairs,The Stairs,5.4,Trad,75 ft,105790307
+beautiful,Beautiful,5.5,Trad,80 ft,105790307
+art-of-the-pissant,Art of the Pissant,5.10a,Sport,30 ft,201172192
+risky-business,Risky Business,5.10a,"Trad, Sport",25 ft,201172212
+crack-of-dust,Crack of Dust,5.8,Trad,30 ft,105790295
+big-kahuna,Big Kahuna,5.11a,Sport,40 ft,201172223
+the-rift,The Rift,5.9,Trad,40 ft,200412107
+orange-sunshine,Orange Sunshine,5.10d,Sport,40 ft,201172212
+joes-v-slot,Joe's V Slot,5.9,Trad,35 ft,105853257
+judgement-day,Judgement Day,5.10b,Trad,35 ft,105853257
+too-hot-to-handle,Too Hot to Handle,5.7,Trad,35 ft,105853257
+gallwas-crack,Gallwas Crack,5.9+,Trad,70 ft,105790295
+nutcracker,Nutcracker,5.9+,Trad,70 ft,105790295
+vawters-dihedral,Vawter's Dihedral,5.10a,Trad,40 ft,200412107
+craigs-crack,Craig's Crack,5.8,Trad,35 ft,200412065
+never-intended,Never Intended,5.10c,Sport,50 ft,105790295
+fingerrip,Fingerrip,5.9+,Trad,35 ft,105790295
+mission-control,Mission Control,5.8,Sport,70 ft,105790307
+mission-gorge-traverse,Mission Gorge Traverse,5.8,Trad,100 ft,105790295
+mickey-finn,Mickey Finn,5.10b,Sport,30 ft,105790295
+cornered,Cornered,5.10d,TR,35 ft,105790295
+lunch-rock-slab,Lunch Rock Slab,5.10a,TR,35 ft,105790307
+lunch-rock-right-crack,Lunch Rock Right Crack,5.8,TR,35 ft,105790307
+middle-finger,Middle Finger,5.10c,TR,30 ft,201172980
+rectum-roof,Rectum Roof,5.10c,Trad,75 ft,105790295
+your-lead,Your Lead,5.9,Sport,40 ft,105790307
+skyline-arete,Skyline Arete,5.7+,"Trad, Sport",40 ft,105790307
+skyline-face,Skyline Face,5.7+,"Trad, Sport",40 ft,105790307
+true-skyline-arete,True Skyline Arete,5.8,"Trad, Sport",40 ft,105790307
+orange-walk,Orange Walk,5.10c,"Trad, Sport",40 ft,105790307
+bilbos-hanging-garden-crack,Bilbo's Hanging Garden Crack,5.10b,Trad,35 ft,200412098
+glamdring,Glamdring,5.11a,Sport,50 ft,201172212
+karmic-relief,Karmic Relief,5.10a,Sport,50 ft,201172212
+room-with-a-view-aka-helms-deep,Room With A View (aka Helm's Deep),5.7,Trad,50 ft,201172212
+sympathy,Sympathy,5.10b,Trad,40 ft,105790295
+prime-directive,Prime Directive,5.10c,"Trad, Sport",50 ft,105790295
+waiting-for-bruce,Waiting for Bruce,5.9,Sport,,105790307
+mighty-monger,Mighty Monger,5.10d,Sport,50 ft,200412107
+moonage-daydream,Moonage Daydream,5.11a,Sport,25 ft,106131909
+left-hand-oop,Left Hand Oop,5.9,TR,25 ft,106131909
+alley-oop,Alley Oop,5.10c,TR,25 ft,106131909
+quack-of-ducks,Quack of Ducks,5.9,Trad,40 ft,105790295
+kathys-memorial,Kathy's Memorial,5.10a,"Trad, TR",40 ft,200412117
+zig-zag,Zig Zag,5.10a,TR,30 ft,200412136
+batsos-resurrection,Batso's Resurrection,5.10b,TR,30 ft,200412136
+trapeze,Trapeze,5.11,Trad,60 ft,105790295
+out-on-a-whim,Out on a Whim,5.10d,Trad,40 ft,201172980
+skyline-pinnacle,Skyline Pinnacle,5.7,Trad,80 ft,105790307
+the-owl,The Owl,5.8,Trad,30 ft,105790295
+laundry-chute,Laundry Chute,5.8,Trad,25 ft,105790295
+cirith-ungol,Cirith Ungol,5.6,Trad,30 ft,201172975
+facial-tissue,Facial Tissue,5.10b,TR,35 ft,200412065
+double-trouble,Double Trouble,5.10c,Sport,45 ft,200412107
+abacab,Abacab,5.7,TR,40 ft,200412117
+dwarrowdelf,Dwarrowdelf,5.8,Trad,30 ft,201172223
+back-to-basics,Back to Basics,5.7,"Trad, TR",30 ft,200412117
+baby-dihedral,Baby Dihedral,5.5,Trad,25 ft,200412117
+orc,Orc,5.9,Trad,35 ft,201172975
+buckwheat,Buckwheat,5.11c,Sport,50 ft,105790295
+standard-deviation,Standard Deviation,5.10c,"Sport, TR",50 ft,200412117
+rock-on,Rock On,5.10b,"Trad, Sport",30 ft,105790295
+aqualunge,Aqualunge,5.11a,Sport,40 ft,200412098
+escape-from-the-underworld,Escape From The Underworld,5.11c,Sport,30 ft,200412098
+art-imitates-life,Art Imitates Life,5.12a,Sport,25 ft,201172192
+fools-gold,Fool's Gold,5.10a,Sport,30 ft,201172192
+khazad-dum,Khazad-dûm,5.10b,Sport,30 ft,201172223
+anduril,Andúril,5.11a,"Sport, TR",25 ft,201172223
+general-dynamics,General Dynamics,5.11a,"Trad, Sport",30 ft,105790295
+left-overture,Left Overture,5.11a,TR,30 ft,105790295
+unnatural-act,Unnatural Act,5.11d,TR,30 ft,105790295
+orthanc,Orthanc,5.8-,Sport,20 ft,201172980
+handyman,Handyman,5.9,Trad,30 ft,105790295
+lunch-rock-left-crack,Lunch Rock Left Crack,5.8,TR,25 ft,105790307
+little-bruiser,Little Bruiser,5.8,Trad,25 ft,201172223
+nameless-right-of-shadowfax,Nameless Right of Shadowfax,5.9-,TR,35 ft,201172980
+empathy,Empathy,5.10b,Sport,40 ft,105790295
+exit-stage-right-the-l-word,Exit Stage Right / The L Word,5.8,Trad,25 ft,105790295
+radagast,Radagast,5.6,Trad,35 ft,201172980
+rock-wrestling-smaug,Rock Wrestling/ Smaug,5.9,Trad,35 ft,201172980
+craigs-chimney,Craig's Chimney,5.3,TR,20 ft,200412065
+ramp-arete,Ramp Arete,5.8,TR,60 ft,105790307
+clear-light,Clear Light,5.10a,"Trad, TR",60 ft,105790307
+cant-touch-this,Can't touch this,5.10+,TR,60 ft,105790307
+the-blocks,The Blocks,5.6,"Trad, TR",30 ft,105790295
+fangorn-crack,Fangorn Crack,5.8+,"Trad, TR",30 ft,201172192
+master-of-defeet,Master of Defeet,5.11a,Sport,40 ft,105790295
+rocking-the-dalai-lama,Rocking the Dalai Lama,5.11d,Sport,30 ft,201172212
+cake-walk,Cake Walk,5.3,Trad,40 ft,200412117
+indecision,Indecision,5.10a,TR,50 ft,200412117
+deviate-behavior,Deviate Behavior,5.11+,Sport,45 ft,200412117
+nameless-to-the-right-of-fools-gold,Nameless to the right of Fools Gold,5.8,"Trad, TR",30 ft,201172192
+slice-and-dice,Slice and Dice,5.7,Trad,25 ft,201172192
+rock-on-right,Rock On Right,5.10d,Sport,35 ft,105790295
+absorbine-junior,Absorbine Junior,5.10c,TR,30 ft,105790295
+the-thumb,The Thumb,5.12c,Sport,35 ft,105790295
+obverse-from-the-gap,Obverse from the Gap,5.11d,Sport,50 ft,105790295
+quantum-leap,Quantum Leap,5.11c,Sport,50 ft,105790295
+afterthought,Afterthought,5.10a,"Sport, TR",40 ft,201172223
+merryanne,Merryanne,5.7+,"Sport, TR",30 ft,201172212
+the-wasp,The Wasp,5.11b,Trad,80 ft,105790295
+intrinsic-value,Intrinsic Value,5.10c/d,TR,,105790295
+caterpillar,Caterpillar,5.8,"Trad, Sport",40 ft,105790295
+cave-crack,Cave Crack,5.9,"Trad, TR",40 ft,105790295
+digitalis,Digitalis,5.9+,TR,50 ft,200412117
+isengard,Isengard,5.10c,Sport,30 ft,201172980
+strider-face,Strider Face,5.10b,TR,20 ft,201172980
+smeagols-surprise,Smeagol's Surprise,5.6,Trad,30 ft,201172223
+volume-ii,Volume II,5.7,TR,50 ft,200412107
+the-blocks-direct,The Blocks Direct,5.12-,Trad,25 ft,105790295
+knob-job-bypass,Knob Job Bypass,5.10-,"Trad, TR, Boulder",30 ft,105790295
+false-mission-gorge-traverse,False Mission Gorge Traverse.,5.10a,Boulder,100 ft,105790295
+top-of-the-pops,Top of the Pops,5.7,Trad,30 ft,200412086
+old-school-problem-1,Old School Problem  1,5.9,Boulder,15 ft,108837966
+old-school-problem-2-aka-south-arete,Old School Problem  2 AKA South Arête.,5.11a,Boulder,15 ft,108837966
+old-school-problem-3-aka-southwest-arete,Old School Problem  3 AKA  Southwest Arête,5.11d,Boulder,15 ft,108837966
+big-orange,Big Orange,5.12,Boulder,16 ft,108837966
+old-school-problem-5-aka-the-north-arete,Old School Problem  5 AKA The North Arête,5.7,Boulder,12 ft,108837966
+sierra-club-chimney,Sierra Club Chimney,5.4,"Trad, TR",40 ft,105790295
+the-perception-of-buzzy-fuzzy-pelt,The Perception of Buzzy Fuzzy Pelt,5.8,Trad,60 ft,105790295
+skyline-chimney,Skyline Chimney,5.4,Trad,50 ft,105790307
+the-steps,The Steps,5.2,Trad,,105790307
+wallflower,Wallflower,5.10c,TR,30 ft,105790295
+hidden-wall,Hidden Wall,5.10,TR,25 ft,105790295
+history-book,History Book,5.6,Trad,,200412086
+cactus-flower,Cactus Flower,5.6,Trad,,105790307
+strider,Strider,5.6,"Trad, TR",25 ft,201172980
+joes-58,Joe's 5.8,5.8+,Trad,,105853257
+grandpas-dihedral,Grandpa's Dihedral,5.11a,TR,30 ft,201172192
+straight-out-of-sitka,Straight Out of Sitka,5.10b,TR,30 ft,201172192
+clairemont-calling,Clairemont Calling,5.10d,TR,30 ft,201172192
+when-good-books-go-bad,When Good Books Go Bad,5.11c,TR,35 ft,201172212
+mission-impossible,Mission Impossible,5.12a,Sport,50 ft,105790295
+no-ticket,No Ticket,5.10b,TR,25 ft,200412086
+punk-rock-show,Punk Rock Show,5.10c,TR,30 ft,200412086
+revision,Revision,5.10d,"Sport, TR",70 ft,200412086
+bekes-wild-ride,Beke's Wild Ride,5.6,Trad,,200412107
+mission-obscurity,Mission Obscurity,5.7+,Trad,,200412107
+lord-of-the-flies,Lord of the Flies,5.10b/c,TR,35 ft,200412065
+sloppy-seconds,Sloppy Seconds,5.10a,Trad,40 ft,200412098
+bongo-fury,Bongo Fury,5.9,Trad,40 ft,200412098
+the-v-slot,The V Slot,5.9,Trad,30 ft,105853257
+plumbline,Plumbline,5.12a,Trad,40 ft,105790295
+me-overhang-left,ME Overhang Left,5.9,TR,25 ft,201172223
+me-overhang-center,ME Overhang Center,5.10b,TR,25 ft,201172223
+volume-i,Volume I,5.5,Trad,30 ft,200412107
+yellow-jacket,Yellow Jacket,5.12a,Sport,60 ft,105790295
+stink-finger,Stink Finger,5.10b,"Sport, TR",25 ft,201172980
+razors-edge,Razor's Edge,5.12,Trad,40 ft,105790295
+balrog,Balrog,5.11,TR,20 ft,201172212
+chicken-fart,Chicken Fart,5.9,Trad,40 ft,105790295
+one-step-beyond,One Step Beyond,5.10-,TR,80 ft,105790295
+itwillbegotten,Itwillbegotten,5.12c,"Sport, TR",50 ft,105790295
+missbegettin,MissBeGettin,5.12c,Trad,90 ft,105790295
+chossy-bossy,Chossy Bossy,5.3,Trad,50 ft,200412107
+radagast-direct,Radagast Direct,5.8+,"Trad, TR",35 ft,201172980
+second-edition,Second Edition,5.5,TR,45 ft,200412107
+flake-of-rust,Flake of Rust,5.12a,"Sport, TR",40 ft,105790295
+rock-on-left,Rock On Left,5.11c,Sport,40 ft,105790295
+topped-off,Topped Off,5.12a,"Sport, TR",30 ft,105790295
+lunch-rock-direct,Lunch Rock Direct,5.10d,"Trad, TR",30 ft,105790307
+lunch-rock-center,Lunch Rock Center,5.10c,"Trad, TR",30 ft,105790307
+acrobat,Acrobat,5.11,"Sport, TR",50 ft,105790295
+chimney-sweep,Chimney Sweep,5.10a,"Trad, TR",70 ft,200412098
+the-salty-slug,The Salty Slug,5.10-,"Sport, TR",60 ft,200412107
+sunnyside-of-strider,Sunnyside of Strider,5.9,TR,50 ft,201172980
+imagining-mordor,Imagining Mordor,5.8-,Trad,60 ft,201172980
+fare-thee-well,Fare Thee Well,5.3,"Trad, TR",40 ft,200412136
+between-two-towers,Between Two Towers,5.7,TR,50 ft,201172212
+gratitude,Gratitude,5.10b,"Sport, TR",55 ft,200412107
+z-dog,Z-dog,5.10b,Sport,40 ft,200412107
+madison,Madison,5.9,"Sport, TR",35 ft,200412117
+burrito,Burrito,5.7,"Sport, TR",25 ft,200412117
+grumpy-goat,Grumpy Goat,5.10c,"Sport, TR",60 ft,200412107
+moments-of-zen,Moments of Zen,5.11b,TR,40 ft,201172223
+high-anxiety,High Anxiety,5.11a,"Sport, TR",25 ft,105790295
+goatless,Goatless,5.8,Trad,60 ft,200412107
+lamb-jam,Lamb Jam,5.7,Trad,30 ft,200412107
+cam-jam,Cam Jam,5.8+,Trad,30 ft,200412098
+bolg,Bolg,5.10+,TR,30 ft,201172980
+celebrimbor,Celebrimbor,5.12-,TR,50 ft,201172212
+dope-on-a-rope,Dope on a Rope,5.11,"Sport, TR",40 ft,201172980
+viva-la-resistance,Viva La Resistance,5.12-,"Sport, TR",25 ft,200412065
+encore,Encore,5.12b,Sport,30 ft,105790295
+buttered-donkeys,Buttered Donkeys,5.5,"Trad, TR",20 ft,201033928
+first-impressions,First Impressions,5.7,"Trad, TR",20 ft,201033928
+hippopotamus,Hippopotamus,5.6,"Trad, TR",20 ft,201033928
+ring-my-bell,Ring My Bell,5.6,"Trad, TR",20 ft,201033928
+great-gimli,Great Gimli,5.7,Trad,30 ft,201172223
+beluga,Beluga,5.6,Trad,45 ft,105790307
+echo-location,Echo Location,5.10a,"Trad, TR",20 ft,201033928
+for-whom-the-hee-haws,For Whom The Hee Haws,5.7,Sport,20 ft,201033928
+vermont,Vermont,5.8,"Trad, TR",20 ft,201033928
+pipe-dream,Pipe Dream,5.11c/d,TR,20 ft,201033928
+eventoed-ungulates,Eventoed Ungulates,5.5,"Trad, TR",25 ft,201033928
+foot-notes,Foot Notes,5.11c,"Trad, TR",40 ft,201172223
+big-bruiser,Big Bruiser,5.9,"Trad, TR",25 ft,201172223
+cruisin-for-a-bruisin,Cruisin' for a Bruisin',5.8,TR,25 ft,201172223
+foe-hammer,Foe Hammer,5.9+,"Sport, TR",40 ft,201172975
+rings-of-power,Rings of Power,5.10a/b,"Sport, TR",40 ft,201172975
+say-my-name-sauron,Say My Name Sauron,5.11a,"Sport, TR",40 ft,201172975
+step-exit,Step Exit,5.8,TR,15 ft,201033928
+crisp-wall,Crisp Wall,5.10-,Trad,20 ft,201033928
+the-railing,The Railing,5.10a/b,TR,70 ft,105790307
+dirty-deeds-done-dirt-cheap,Dirty Deeds (Done Dirt Cheap),5.10a/b,"Sport, TR",50 ft,200412107
+look-up-link-up,Look Up Link Up,5.8,Trad,,201172980
+knob-job-bypass,Knob Job Bypass,5.10-,"Trad, TR, Boulder",30 ft,105790295
+false-mission-gorge-traverse,False Mission Gorge Traverse.,5.10a,Boulder,100 ft,105790295
+missionary-mantle,Missionary Mantle,V1,Boulder,13 ft,108837800
+flight-of-the-conquistadores,Flight of the Conquistadores,V3-4,Boulder,18 ft,108837800
+the-shaman-and-the-priest,The Shaman and The Priest,V7-8,Boulder,,108837800
+sacred-land,Sacred Land,V6+,Boulder,15 ft,108837800
+grinding-stone-mantle,Grinding Stone Mantle,V8,Boulder,12 ft,108837800
+grinding-stone-arete,Grinding Stone Arête,V2-3,Boulder,15 ft,108837800
+tomahawked,Tomahawked,V3,Boulder,12 ft,108838170
+chopping-block,Chopping Block,V0-,Boulder,10 ft,108838170
+old-school-problem-1,Old School Problem  1,5.9,Boulder,15 ft,108837966
+old-school-problem-2-aka-south-arete,Old School Problem  2 AKA South Arête.,5.11a,Boulder,15 ft,108837966
+old-school-problem-3-aka-southwest-arete,Old School Problem  3 AKA  Southwest Arête,5.11d,Boulder,15 ft,108837966
+big-orange,Big Orange,5.12,Boulder,16 ft,108837966
+old-school-problem-5-aka-the-north-arete,Old School Problem  5 AKA The North Arête,5.7,Boulder,12 ft,108837966
+quarantine-dreaming-vs-danger-noodle,Quarantine Dreaming VS Danger Noodle,V0,Boulder,10 ft,118959664
+down-climb-problems,Down climb problems,V0,Boulder,8 ft,108837966
+unnamed-v23-traverse,Unnamed V2/3 Traverse,V2-3,Boulder,15 ft,108837966
+split-pea-travers,Split Pea Travers,V3+,Boulder,15 ft,121153785
+les-girls,Les Girls,V1,Boulder,8 ft,122780855
+ariels-vacation,Ariel's vacation,V-easy,Boulder,7 ft,122780855
+flight-of-the-missionary,Flight of the Missionary,V7-8,Boulder,10 ft,108837800
+skinny-pete,Skinny Pete,V0,Boulder,13 ft,201033928
+stinky-pete,Stinky Pete,V3,"TR, Boulder",13 ft,201033928

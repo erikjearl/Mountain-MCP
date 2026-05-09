@@ -1,6 +1,7 @@
 import csv
 import gc
 import os
+import random
 import time
 from datetime import datetime
 from get_routes import get_routes
@@ -40,16 +41,17 @@ CRAGS = {
 }
 
 # Select the crag
-crag_name = "MISSION_GORGE"
+crag_name = "JTREE_HV"
 crag_id = CRAGS[crag_name]
 date_stamp = datetime.now().strftime("%Y%m%d")
 ticks_csv_file = f"ticks/ticks_{crag_name}_{date_stamp}.csv"
 routes_csv_file = f"routes/routes_{crag_name}_{date_stamp}.csv"
 areas_csv_file = f"routes/areas_{crag_name}_{date_stamp}.csv"
 
+os.makedirs("ticks", exist_ok=True)
 os.makedirs("routes", exist_ok=True)
 
-SLEEP_TIME = 10
+SLEEP_TIME = 5
 failed_urls = []
 failed_route_info_urls = []
 total_ticks = 0
@@ -108,7 +110,7 @@ with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
             except Exception as e:
                 print(f"  -Attempt {attempt} failed with error: {e}")
 
-            time.sleep(SLEEP_TIME)
+            time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
             attempt += 1
 
         if ticks is None:
@@ -139,7 +141,7 @@ if failed_urls:
         print(f"  {failed_url}")
     
     print("\nRetrying failed URLs...")
-    time.sleep(SLEEP_TIME)
+    time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
     failed_urls = handle_failed_routes(failed_urls, ticks_csv_file, sleep_time=(SLEEP_TIME * 2))
     
     if failed_urls:

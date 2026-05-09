@@ -1,4 +1,5 @@
 import csv
+import random
 import time
 from get_ticks import get_ticks
 
@@ -23,8 +24,9 @@ def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
             except Exception as e:
                 print(f"  -Attempt {attempt} failed with error: {e}")
 
-            print(f"  Waiting {sleep_time} seconds before the next attempt...")
-            time.sleep(sleep_time)
+            actual_sleep = random.uniform(sleep_time - 2, sleep_time + 2)
+            print(f"  Waiting {actual_sleep:.1f} seconds before the next attempt...")
+            time.sleep(actual_sleep)
             attempt += 1
 
         # If ticks is still None, it means we never succeeded

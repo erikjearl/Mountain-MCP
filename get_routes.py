@@ -6,7 +6,7 @@ def get_route_urls(page_url):
     """
     Returns all /route/ links found on the given page URL.
     """
-    response = requests.get(page_url, timeout=30)
+    response = requests.get(page_url, timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -94,7 +94,6 @@ def get_routes(id):
 
 
 if __name__ == '__main__':
-    id = 105790250
-    id = 106671948
+    id = 106671948  # Pima Canyon
     all_links = get_routes(id)
     print(f"\nREPORT: Found {len(all_links)} total route links")
