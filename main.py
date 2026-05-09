@@ -41,7 +41,7 @@ CRAGS = {
 }
 
 # Select the crag
-crag_name = "JTREE_HV"
+crag_name = "JTREE_CENTRAL"
 crag_id = CRAGS[crag_name]
 date_stamp = datetime.now().strftime("%Y%m%d")
 ticks_csv_file = f"ticks/ticks_{crag_name}_{date_stamp}.csv"
@@ -51,7 +51,7 @@ areas_csv_file = f"routes/areas_{crag_name}_{date_stamp}.csv"
 os.makedirs("ticks", exist_ok=True)
 os.makedirs("routes", exist_ok=True)
 
-SLEEP_TIME = 5
+SLEEP_TIME = 3
 failed_urls = []
 failed_route_info_urls = []
 total_ticks = 0
