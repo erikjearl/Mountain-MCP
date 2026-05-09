@@ -89,7 +89,7 @@ def get_routes(id):
     boulder_links = get_all_pages(boulder_urls)
     print(f"Found {len(boulder_links)} boulders.\n")
 
-    all_links = rock_links + boulder_links
+    all_links = list(set(rock_links + boulder_links))
     return all_links
 
 

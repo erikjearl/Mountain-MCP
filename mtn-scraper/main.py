@@ -40,19 +40,47 @@ CRAGS = {
     "JTREE_PINTO": 119538586,
 }
 
-# Select the crag
-crag_name = "MISSION_GORGE"
-crag_id = CRAGS[crag_name]
-date_stamp = datetime.now().strftime("%Y%m%d")
+# Quick local override — set this to any key from CRAGS to run without env vars
+HARD_CODE_CRAG = 'MT_WOODSON'
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'mtn-data')
-ticks_csv_file = os.path.join(DATA_DIR, 'ticks', f'ticks_{crag_name}_{date_stamp}.csv')
-routes_csv_file = os.path.join(DATA_DIR, 'routes', f'routes_{crag_name}_{date_stamp}.csv')
-areas_csv_file = os.path.join(DATA_DIR, 'routes', 'areas', f'areas_{crag_name}_{date_stamp}.csv')
+# Resolve which crag to scrape.
+# CRAG_ID + CRAG_NAME env vars let you target any crag without touching this file.
+# If only CRAG_NAME is set, it must be a key in the CRAGS dict above.
+# Examples:
+#   CRAG_NAME=YOSEMITE CRAG_ID=105833381   ← any crag, no code change needed
+#   CRAG_NAME=TAHQUITZ                      ← looks up id from CRAGS dict
+_env_name = os.environ.get('CRAG_NAME')
+_env_id   = os.environ.get('CRAG_ID')
 
+if _env_id and not _env_name:
+    raise SystemExit("CRAG_ID is set but CRAG_NAME is not. Set both together.")
+
+if _env_name and _env_id:
+    try:
+        crag_id = int(_env_id)
+    except ValueError:
+        raise SystemExit(f"CRAG_ID='{_env_id}' is not a valid integer.")
+    crag_name = _env_name
+elif _env_name:
+    if _env_name not in CRAGS:
+        raise SystemExit(f"Unknown CRAG_NAME '{_env_name}'. Either add it to CRAGS or also set CRAG_ID.")
+    crag_name = _env_name
+    crag_id   = CRAGS[_env_name]
+elif HARD_CODE_CRAG:
+    crag_name = HARD_CODE_CRAG
+    crag_id   = CRAGS[crag_name]
+else:
+    raise SystemExit("No crag specified. Set CRAG_NAME (+ CRAG_ID if not in CRAGS dict), or set HARD_CODE_CRAG.")
+
+DATA_DIR = os.environ.get('MTN_DATA_DIR', os.path.join(os.path.dirname(__file__), '..', 'mtn-data'))
 os.makedirs(os.path.join(DATA_DIR, 'ticks'), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR, 'routes'), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR, 'routes', 'areas'), exist_ok=True)
+
+date_stamp = datetime.now().strftime("%Y%m%d")
+ticks_csv_file  = os.path.join(DATA_DIR, 'ticks',  f'ticks_{crag_name}_{date_stamp}.csv')
+routes_csv_file = os.path.join(DATA_DIR, 'routes', f'routes_{crag_name}_{date_stamp}.csv')
+areas_csv_file  = os.path.join(DATA_DIR, 'routes', 'areas', f'areas_{crag_name}_{date_stamp}.csv')
 
 SLEEP_TIME = 3
 failed_urls = []
@@ -61,11 +89,11 @@ total_ticks = 0
 total_routes = 0
 areas_seen = {}  # area_id -> (area_id, name, parent_id, full_path)
 
-# get all routes in the crag
+print(f"Scraping crag: {crag_name} (id={crag_id})")
+
 route_urls = get_routes(crag_id)
 print(f"Found {len(route_urls)} routes.\n")
 
-# get route info and ticks, writing incrementally to avoid holding everything in memory
 with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
      open(routes_csv_file, "w", newline="", encoding="utf-8") as routes_f:
 
@@ -109,7 +137,6 @@ with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
                 ticks = get_ticks(url)
                 if ticks is not None:
                     break
-
             except Exception as e:
                 print(f"  -Attempt {attempt} failed with error: {e}")
 
@@ -143,11 +170,11 @@ if failed_urls:
     print("\nFailed URLs")
     for failed_url in failed_urls:
         print(f"  {failed_url}")
-    
+
     print("\nRetrying failed URLs...")
     time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
     failed_urls = handle_failed_routes(failed_urls, ticks_csv_file, sleep_time=(SLEEP_TIME * 2))
-    
+
     if failed_urls:
         print("\nStill failing URLs")
         for failed_url in failed_urls:
@@ -164,3 +191,6 @@ if failed_route_info_urls:
         print(f"  {url}")
 else:
     print("\nAll route info scraped successfully.")
+
+if failed_urls or failed_route_info_urls:
+    raise SystemExit(1)

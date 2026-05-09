@@ -9,7 +9,7 @@ def get_onx_stat_table_requests_html(url):
     session = HTMLSession()
     try:
         r = session.get(url, timeout=30)
-        r.html.render(timeout=30, sleep=2)
+        r.html.render(timeout=30, sleep=2, chromium_args=['--no-sandbox', '--disable-setuid-sandbox'])
         main_content_div = r.html.find("div.main-content-container", first=True)
         if main_content_div:
             return main_content_div.html

@@ -51,7 +51,9 @@ def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
 
 
 if __name__ == "__main__":
-    csv_file = "../mtn-data/ticks/ticks_####.csv"
+    import os
+    data_dir = os.environ.get('MTN_DATA_DIR', os.path.join(os.path.dirname(__file__), '..', 'mtn-data'))
+    csv_file = os.path.join(data_dir, 'ticks', 'ticks_####.csv')  # replace #### with the actual filename
     failed_urls = [
                     # "https://www.mountainproject.com/route/stats/107694100/merryanne",
                     # "https://www.mountainproject.com/route/stats/119371997/balrog",
