@@ -90,77 +90,14 @@ The scrape pipeline is four stages:
 
 ## Output schemas
 
-**`mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`**
-```
-Route,Name,Date,Details
-```
-- `Route` — URL slug (last path segment of the stats URL), e.g. `illusion-dweller`
-- `Name` — Mountain Project username
-- `Date` — `"Apr 21, 2026"` format
-- `Details` — free text beginning with style tag: `Lead / Onsight.`, `Lead / Redpoint.`, `Lead / Fell/Hung.`, `Lead / Flash.`, `TR`, `Follow`, `Solo`, `Boulder`. Multi-pitch routes include `· X pitch` in the details; `parse_pitches()` in `ticks_analysis.py` extracts this with a regex.
+Full schemas, join model, and query examples are documented in `mtn-data/data-context.md`.
 
-**`mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`**
-```
-Route,Name,Grade,Type,Length,AreaID
-```
-- `Route` — URL slug, joins to `ticks.Route`
-- `Name` — full route name, e.g. `Illusion Dweller`
-- `Grade` — YDS grade for rock routes (e.g. `5.10b`), V-scale for boulders (e.g. `V3`)
-- `Type` — raw type string from Mountain Project: `Trad`, `Sport`, `Boulder`, `TR`, or combinations like `Trad, Sport`. A route labeled only `TR` or `Toprope` is a top-rope-only route.
-- `Length` — route length in feet, e.g. `100 ft`. Empty for boulders.
-- `AreaID` — numeric Mountain Project area ID of the route's immediate parent area; joins to `areas.AreaID`
+**Quick reference — three CSVs per crag run:**
+- `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv` → `Route, Name, Date, Details`
+- `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv` → `Route, Name, Grade, Type, Length, AreaID`
+- `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv` → `AreaID, Name, ParentID, FullPath`
 
-**`mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`**
-```
-AreaID,Name,ParentID,FullPath
-```
-- `AreaID` — numeric Mountain Project area ID extracted from the area URL (e.g. `106621111`)
-- `Name` — area display name, e.g. `Sentinel - W Face`
-- `ParentID` — parent area's numeric ID (empty for top-level geography)
-- `FullPath` — full breadcrumb from top-level geography down to this area, e.g. `California > Joshua Tree NP > Hidden Valley Area > Real Hidden Valley > Sentinel > Sentinel - W Face`
-
-One row per unique area encountered across all routes in the crag. Many routes share the same wall, so a crag with 300 routes typically has ~20–40 unique areas.
-
-**Join chain:** `ticks.Route` → `routes.Route` → `routes.AreaID` → `areas.AreaID`
-
-**Data model:**
-```
-areas
-  AreaID (PK) │ Name              │ ParentID  │ FullPath
-  ─────────────┼───────────────────┼───────────┼──────────────────────────────────────
-  106621111    │ Sentinel - W Face │ 105720693 │ California > ... > Sentinel - W Face
-
-routes
-  Route (PK)         │ Name             │ Grade  │ Type │ Length │ AreaID (FK→areas)
-  ────────────────────┼──────────────────┼────────┼──────┼────────┼──────────────────
-  illusion-dweller   │ Illusion Dweller │ 5.10b  │ Trad │ 100 ft │ 106621111
-
-ticks
-  Route (FK→routes) │ Name            │ Date         │ Details
-  ───────────────────┼─────────────────┼──────────────┼──────────────────────────
-  illusion-dweller  │ Erik Earl       │ Apr 21, 2026 │ Lead / Onsight. Great route
-```
-
-**Important:** `Route` slug is unique within a crag's URL space but may collide across crags (two crags can have a route named "the-crack"). Always filter or join within a single crag's set of CSVs.
-
-## What the data can answer
-
-With ticks only:
-- Who are the most active climbers at a crag?
-- Which routes get the most traffic overall or within a date range?
-- How many pitches has a given climber completed?
-
-With ticks + routes:
-- What grade range sees the most traffic? (join on Grade)
-- Are Trad or Sport routes more popular at this crag?
-- Which specific routes are being onsighted vs. fell/hung? (Details field + Grade)
-- What's the hardest route with the most ticks? (popularity vs. difficulty)
-
-With ticks + routes + areas:
-- Which sub-area (wall) is the busiest?
-- Is Hidden Valley more trafficked than Real Hidden Valley?
-- What's the grade distribution of routes climbed in a specific area?
-- Which area has the most unique climbers vs. repeat visitors?
+Join chain: `ticks.Route` → `routes.Route` → `routes.AreaID` → `areas.AreaID`
 
 ## HTML parsing details
 
@@ -193,64 +130,6 @@ Requires JavaScript rendering — `requests_html` drives headless Chromium via p
 **Tick table** — find all `<table class="table table-striped">` and pick the one that contains a `<tr id="ticks.*">` row. Each such row has two `<td>` cells:
 - Cell 0: username in an `<a>` tag
 - Cell 1: date in a `<strong>` tag; details in a `<div class="small">`
-
-## Climbing domain context
-
-**Disciplines**
-- **Sport climbing** — bolted routes, leader clips pre-installed protection. YDS grades (5.0–5.15d). `diffMinrock=800&diffMaxrock=12400` in Mountain Project's internal encoding.
-- **Trad climbing** — leader places removable gear (cams, nuts) into cracks as they climb; follower removes it. Same YDS grades. Common at Tahquitz, Joshua Tree. Frequently multi-pitch (5–7+ pitches).
-- **Bouldering** — no rope, V-scale grades (V0–V17). `diffMinboulder=20000&diffMaxboulder=21700`. Scraped with `type=boulder`.
-- **Pitch** — one rope-length section of a multi-pitch route. `ticks_analysis.py` sums pitches to weight long routes appropriately.
-
-**YDS grades**
-- 5.0–5.9: accessible range. 5.9 was historically the hardest possible grade when the system was invented at Tahquitz in the 1950s (the route "Open Book" defined it).
-- 5.10+: subdivided a/b/c/d (5.10a = easiest, 5.10d = hardest within that number). 5.10a and 5.10d are a huge gap.
-- R/X suffix = sparse or no protection; a fall can be very consequential.
-
-**Trad crack sizes and technique** (crack width drives both technique and gear selection)
-
-| Crack type | Width | Technique |
-|---|---|---|
-| Thin finger | 7–15mm | Fingertips only, first knuckle |
-| Finger crack | 15–28mm | 1–2 knuckles inserted, twist to lock |
-| Ring lock / thin hand | 28–42mm | Wrist torqued, ring finger creates lock |
-| Hand crack | 38–55mm | Full hand jam — thumb tucked, heel of hand locks. The most comfortable crack type. |
-| Fist crack | 65–90mm | Fist inserted, fingers flex outward to grip |
-| Off-width (OW) | 90–200mm | Arm bars, chicken wings, knee locks — awkward and feared |
-| Chimney | 200mm+ | Entire body inside; back on one wall, feet on the other |
-
-Hand cracks (~C4 #1–#2 range) are considered the classic, enjoyable crack style. Off-width is widely disliked.
-
-**Cam sizing — Black Diamond C4** (double-axle, industry standard)
-
-| Size | Color | Range (mm) | Crack type |
-|---|---|---|---|
-| 0.3 | Blue | 13.8–23.4 | Finger |
-| 0.4 | Gray | 15.5–26.7 | Finger |
-| 0.5 | Purple | 19.6–33.5 | Finger–ring lock |
-| 0.75 | Green | 23.9–41.2 | Ring lock |
-| #1 | Red | 30.2–52.1 | Ring lock–hand |
-| #2 | Yellow | 37.2–64.9 | Hand |
-| #3 | Blue | 50.7–87.9 | Hand–fist |
-| #4 | Gray | 66.0–114.7 | Fist–OW |
-| #5 | Purple | 85.4–148.5 | OW |
-| #6 | Green | 114.1–195.0 | OW |
-
-The #1 and #2 are the most-used cams on any rack; many climbers carry doubles of each. The BD Z4 extends below the C4 down to 7.5mm (sizes #0–#0.75) for very thin seams.
-
-**Cam sizing — Totem Cam** (independent lobes, excels in flares and pin scars)
-
-| Size | Color | Range (mm) | Approx C4 equivalent |
-|---|---|---|---|
-| 0.50 | Black | 11.7–18.9 | C4 0.3 |
-| 0.65 | Blue | 13.8–22.5 | C4 0.4 |
-| 0.80 | Yellow | 17.0–27.7 | C4 0.5 |
-| 1.00 | Purple | 20.9–34.2 | C4 0.75 |
-| 1.25 | Green | 25.7–42.3 | C4 1 |
-| 1.50 | Red | 31.6–52.2 | C4 1–2 |
-| 1.80 | Orange | 39.7–64.2 | C4 2 |
-
-Totem only covers the finger-to-hand range (up to ~64mm / C4 #2). No Totem equivalent exists for fist or off-width. Their independent lobe design self-equalizes in flared or uneven cracks — a significant advantage at granite crags like Joshua Tree where cracks are often polished and slightly flared.
 
 ## Crag IDs
 
