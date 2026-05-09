@@ -14,52 +14,67 @@ Scrapes Mountain Project (mountainproject.com) to collect **ticks** — records 
 pip install requests beautifulsoup4 requests-html
 ```
 
+## Project structure
+
+```
+mtn-scraper/   ← scraper code, tools, archive
+mtn-data/      ← all collected CSV data (written by scraper, read by tools/bot)
+  ticks/
+  routes/
+    areas/
+```
+
+The MCP bot section (`mtn-mp-bot/`) is planned but not yet created.
+
 ## Running the scraper
 
 ```bash
+cd mtn-scraper
 # Edit main.py to set crag_name to the desired key from the CRAGS dict, then:
 python main.py
 ```
 
 Output is written to three timestamped CSV files per run:
-- `ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
-- `routes/routes_<CRAG>_<YYYYMMDD>.csv`
-- `routes/areas_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`
 
 The scraper paginates through all routes at the crag, fetches route metadata from the route page, renders each JavaScript-heavy stats page with `requests_html` for ticks, and retries failures automatically.
 
 ## Analyzing tick data
 
 ```bash
-python ticks_analysis.py ticks/ticks_TAHQUITZ_20260507.csv
-python ticks_analysis.py ticks/ticks_TAHQUITZ_20260507.csv ticks/ticks_MALIBU_CREEK_20260507.csv   # multiple files
+cd mtn-scraper
+python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_20260507.csv
+python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_20260507.csv ../mtn-data/ticks/ticks_MALIBU_CREEK_20260507.csv   # multiple files
 ```
 
 Prints top 20 routes and top 20 climbers by tick count + pitch count. Edit `start_date`/`end_date` and `top_n` directly in the `if __name__ == "__main__"` block.
 
-Set `routes_file` in the `if __name__` block to the matching `routes_<CRAG>_<YYYYMMDD>.csv` to show full route names and grades in the output instead of URL slugs. Leave it as `None` to use slug-only output (original behavior).
+Set `routes_file` in the `if __name__` block to the matching `../mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv` to show full route names and grades in the output instead of URL slugs. Leave it as `None` to use slug-only output (original behavior).
 
 **Note:** `ticks_analysis.py` only reads ticks (and optionally routes). The areas CSV enables further grouping by wall/sub-area — see **What the data can answer** below.
 
 ## Scraping a single route (for debugging)
 
 ```bash
+cd mtn-scraper
 python get_ticks.py       # renders the stats page for the hardcoded URL, prints tick count
 python get_route_info.py  # fetches the route page for two hardcoded URLs, prints parsed fields
-python stats_table.py     # renders a stats page and saves the raw HTML to content.html
+python archive/stats_table.py  # renders a stats page and saves raw HTML to archive/html/content.html
 ```
 
 To test a different URL, edit the hardcoded URL in the `if __name__ == '__main__'` block at the bottom of whichever file you're running.
 
-`html/` contains saved debug HTML snapshots (`content.html`, `onx-stats.table.html`) — these are artifacts from `stats_table.py` runs, not source files.
+`archive/html/` contains saved debug HTML snapshots (`content.html`, `onx-stats.table.html`) — these are artifacts from `stats_table.py` runs, not source files.
 
-**`test.py` is a prototype, not a test suite.** It uses plain `requests` with no JS rendering. It will silently return empty results on most routes because Mountain Project stats pages require JavaScript to populate the tick table. Do not use it to validate behavior — use `get_ticks.py` instead.
+**`archive/test.py` is a prototype, not a test suite.** It uses plain `requests` with no JS rendering. It will silently return empty results on most routes because Mountain Project stats pages require JavaScript to populate the tick table. Do not use it to validate behavior — use `get_ticks.py` instead.
 
 **`failed_routes.py` can be run standalone** to manually retry specific URLs that are still failing after a full run. Uncomment the URLs in its `__main__` block and set `csv_file` to the target ticks CSV, then run `python failed_routes.py`. It appends recovered ticks to the existing CSV without overwriting it.
 
 ## Rate limiting
 
-`SLEEP_TIME` (set in `main.py`) controls the sleep between tick-scrape attempts. Mountain Project will throttle or block aggressive scrapers — do not set it below ~9s. The failed-URL retry pass uses `SLEEP_TIME * 2` for the same reason. Route info fetches (plain HTTP, no JS) use a separate 5s sleep on retry only — they do not sleep on success since the JS rendering of the following ticks fetch provides natural delay.
+`SLEEP_TIME` (set in `main.py`) controls the sleep between tick-scrape attempts. Mountain Project will throttle or block aggressive scrapers. The failed-URL retry pass uses `SLEEP_TIME * 2` for the same reason. Route info fetches (plain HTTP, no JS) use a separate 5s sleep on retry only — they do not sleep on success since the JS rendering of the following ticks fetch provides natural delay.
 
 ## Architecture
 
@@ -71,11 +86,11 @@ The scrape pipeline is four stages:
 
 3. **`get_ticks.py`** — The stats pages are JavaScript-rendered, so `requests_html` drives a headless Chromium to get the DOM. `parse_ticks_direct()` then finds the tick table by looking for `<tr id="ticks.*">` rows and extracts user name, date, and details. See **HTML parsing details** below.
 
-4. **`main.py`** — Orchestrates the loop: for each route URL, fetch route info (3 attempts, 5s sleep) then fetch ticks (3 attempts, 9s sleep). Writes ticks and routes incrementally with `flush()` after each row. Collects areas in a dict (deduplicating by area ID) and writes the areas CSV after the loop. Hands still-failing tick URLs to `failed_routes.py` for a second pass with a longer sleep. Failing route info URLs are logged at the end.
+4. **`main.py`** — Orchestrates the loop: for each route URL, fetch route info (3 attempts, 5s sleep) then fetch ticks (3 attempts, ~5s sleep). Writes ticks and routes incrementally with `flush()` after each route. Collects areas in a dict (deduplicating by area ID) and writes the areas CSV after the loop. Hands still-failing tick URLs to `failed_routes.py` for a second pass with a longer sleep. Failing route info URLs are logged at the end.
 
 ## Output schemas
 
-**`ticks/ticks_<CRAG>_<YYYYMMDD>.csv`**
+**`mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`**
 ```
 Route,Name,Date,Details
 ```
@@ -84,7 +99,7 @@ Route,Name,Date,Details
 - `Date` — `"Apr 21, 2026"` format
 - `Details` — free text beginning with style tag: `Lead / Onsight.`, `Lead / Redpoint.`, `Lead / Fell/Hung.`, `Lead / Flash.`, `TR`, `Follow`, `Solo`, `Boulder`. Multi-pitch routes include `· X pitch` in the details; `parse_pitches()` in `ticks_analysis.py` extracts this with a regex.
 
-**`routes/routes_<CRAG>_<YYYYMMDD>.csv`**
+**`mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`**
 ```
 Route,Name,Grade,Type,Length,AreaID
 ```
@@ -95,7 +110,7 @@ Route,Name,Grade,Type,Length,AreaID
 - `Length` — route length in feet, e.g. `100 ft`. Empty for boulders.
 - `AreaID` — numeric Mountain Project area ID of the route's immediate parent area; joins to `areas.AreaID`
 
-**`routes/areas_<CRAG>_<YYYYMMDD>.csv`**
+**`mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`**
 ```
 AreaID,Name,ParentID,FullPath
 ```
@@ -242,9 +257,9 @@ Totem only covers the finger-to-hand range (up to ~64mm / C4 #2). No Totem equiv
 Defined in `main.py`'s `CRAGS` dict. SoCal crags (Tahquitz, Malibu Creek, Mt. Woodson, Mission Gorge, etc.), NorCal Bay Area clusters, Arizona (McDownells, Pima Canyon), and Joshua Tree sectors.
 
 Output CSVs per crag live in:
-- `ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
-- `routes/routes_<CRAG>_<YYYYMMDD>.csv`
-- `routes/areas_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/ticks/ticks_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/routes/routes_<CRAG>_<YYYYMMDD>.csv`
+- `mtn-data/routes/areas/areas_<CRAG>_<YYYYMMDD>.csv`
 
 To find a new crag's ID: navigate to the area on Mountain Project — the numeric ID is in the URL: `mountainproject.com/area/105790250/mission-gorge` → ID is `105790250`.
 
@@ -255,4 +270,4 @@ Mountain Project URL structure:
 
 ## Planned web UI
 
-`website.txt` outlines a future web application with: a crag selector by ID, a "collect data" button that runs the full scrape with a progress bar, retry-failed-URLs controls, and a crag dashboard showing most recent tick (who, what route, when). The current scripts are the backend logic for this planned UI.
+`archive/website.txt` outlines a future web application with: a crag selector by ID, a "collect data" button that runs the full scrape with a progress bar, retry-failed-URLs controls, and a crag dashboard showing most recent tick (who, what route, when). The current scripts are the backend logic for this planned UI.

@@ -1,3 +1,4 @@
+import os
 from requests_html import HTMLSession
 
 def get_onx_stat_table_requests_html(url):
@@ -21,5 +22,6 @@ if __name__ == "__main__":
         print("Could not find <div class='main-content-container'> in the rendered DOM.")
     else:
         print("Got main-content-container HTML!")
-        with open("content.html", "w", encoding="utf-8") as file:
+        out_path = os.path.join(os.path.dirname(__file__), "html", "content.html")
+        with open(out_path, "w", encoding="utf-8") as file:
             file.write(html_snippet)

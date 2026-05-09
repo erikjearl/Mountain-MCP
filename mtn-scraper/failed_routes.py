@@ -51,7 +51,7 @@ def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
 
 
 if __name__ == "__main__":
-    csv_file = "ticks_####.csv"
+    csv_file = "../mtn-data/ticks/ticks_####.csv"
     failed_urls = [
                     # "https://www.mountainproject.com/route/stats/107694100/merryanne",
                     # "https://www.mountainproject.com/route/stats/119371997/balrog",

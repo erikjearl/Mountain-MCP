@@ -94,7 +94,7 @@ if __name__ == "__main__":
     end_date = None
 
     # Optional: set to the matching routes CSV to show full route names and grades.
-    # Example: "routes/routes_TAHQUITZ_20260507.csv"
+    # Example: "../mtn-data/routes/routes_TAHQUITZ_20260507.csv"
     routes_file = None
 
     analyze_top_climbs(files, top_n, start_date, end_date, group_by="route", routes_file=routes_file)
