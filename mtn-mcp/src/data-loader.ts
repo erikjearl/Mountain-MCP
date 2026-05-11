@@ -92,6 +92,25 @@ export function loadAreas(crag: string): Area[] {
   return loadCsv<Area>(path);
 }
 
+// ── Grade utilities ────────────────────────────────────────────────────────
+
+// Converts a YDS grade string to a sortable number (e.g. "5.10b" → 10.25).
+export function ydsToNum(grade: string): number {
+  const m = grade.match(/5\.(\d+)([abcdABCD+\-]?)/);
+  if (!m) return 0;
+  const num = parseInt(m[1], 10);
+  const sub = m[2]?.toLowerCase() ?? "";
+  const subOffset = ({ a: 0, b: 0.25, c: 0.5, d: 0.75, "+": 0.5, "-": 0 } as Record<string, number>)[sub] ?? 0;
+  return num + subOffset;
+}
+
+// Converts a V-scale grade string to a number (e.g. "V6" → 6, "VB" → -1).
+export function vGradeToNum(grade: string): number {
+  if (/^VB$/i.test(grade)) return -1;
+  const m = grade.match(/V(\d+)/i);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 // Parses pitch count from a Details string. Returns 1 if not found.
@@ -106,21 +125,37 @@ export function parseDateFromTick(dateStr: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+// Strips the leading "Month DD, YYYY · " date prefix from a Details string.
+// Mountain Project includes the date in the details text scraped from the stats page.
+function stripDetailsPrefix(details: string): string {
+  // Remove date + separator: "Apr 21, 2026 ·  " or "Apr 18, 2026 • "
+  let text = details.replace(/^[A-Z][a-z]+ \d{1,2}, \d{4}\s*[·•]\s*/u, "").trim();
+  // Remove pitch count prefix if present: "4 pitches.  " or "1 pitch.  "
+  text = text.replace(/^\d+\s+pitche?s?\.\s*/i, "").trim();
+  return text;
+}
+
 // Extracts the leading style tag from a Details string.
+// Details format (actual): "Apr 21, 2026 ·  Lead / Redpoint. notes"
+//                          "Apr 4, 2026 · 4 pitches.  Lead / Onsight. notes"
+//                          "Apr 18, 2026 • No names/notes"
 export function parseStyle(details: string): string {
+  const text = stripDetailsPrefix(details);
+  // More-specific prefixes must come before "Lead" since it's a substring of all "Lead / X"
   const prefixes = [
     "Lead / Onsight",
     "Lead / Flash",
     "Lead / Redpoint",
     "Lead / Pinkpoint",
     "Lead / Fell/Hung",
+    "Lead",
     "Follow",
     "Solo",
     "Boulder",
     "TR",
   ];
   for (const p of prefixes) {
-    if (details.startsWith(p)) return p;
+    if (text.startsWith(p)) return p;
   }
-  return details.split(".")[0].trim();
+  return "Unknown";
 }

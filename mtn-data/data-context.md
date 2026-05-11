@@ -76,23 +76,35 @@ Route, Name, Date, Details
 | `Route` | string | URL slug of the route, e.g. `illusion-dweller`. Foreign key → `routes.Route`. |
 | `Name` | string | Mountain Project username of the climber who logged the tick. |
 | `Date` | string | Date of the ascent in `"Mon DD, YYYY"` format, e.g. `"Apr 21, 2026"`. |
-| `Details` | string | Free text. Begins with a style tag, then optional pitch count, then optional notes. |
+| `Details` | string | Scraped from Mountain Project stats page. Always begins with the date, then an optional pitch count, then a style tag, then optional free-text notes. |
 
-**Details field format:**
-- Style prefix: `Lead / Onsight.` `Lead / Flash.` `Lead / Redpoint.` `Lead / Fell/Hung.` `TR` `Follow` `Solo` `Boulder`
-- Pitch count (multi-pitch only): `· 5 pitch` appended after the style
-- Free text notes follow after the pitch count
+**Details field format (actual):**
+```
+<Date> · [N pitches. ] <Style>[. <notes>]
+<Date> • No names/notes
+<Date>
+```
+
+- The date repeats the `Date` column value — Mountain Project includes it in the stats page details div.
+- Separator after date: `·` (U+00B7 middle dot) or `•` (U+2022 bullet).
+- Pitch count is **before** the style tag, not after (e.g., `4 pitches.  Lead / Onsight.`).
+- `• No names/notes` is Mountain Project's default when no note is entered.
+- Date-only entries (no separator, no style) occur occasionally.
 
 Example Details values:
 ```
-Lead / Onsight. Great route, bomber hand jams all the way.
-Lead / Redpoint. · 7 pitch  Finally got it after 3 tries.
-TR
-Follow. · 5 pitch
-Boulder. Sit start beta crux on the first move.
+Apr 21, 2026 ·  Lead / Redpoint. Cold day, bring doubles on #2.
+Apr 4, 2026 · 4 pitches.  Lead / Onsight. Lead with Casey. Fun day!
+Apr 18, 2026 • No names/notes
+Dec 30, 2026 ·  TR.
+Mar 1, 2026 ·  Follow.
+Sep 29, 2025 ·  Lead.
+Sep 5, 2025
 ```
 
-Parsing pitch count: extract with regex `(\d+)\s+pitch` — if not present, assume 1 pitch (all boulders and single-pitch routes).
+Known style tags: `Lead / Onsight`, `Lead / Flash`, `Lead / Redpoint`, `Lead / Pinkpoint`, `Lead / Fell/Hung`, `Lead` (no sub-style), `Follow`, `TR`, `Solo`, `Boulder`.
+
+**Parsing:** Strip date prefix + optional pitch count before applying style matching. Regex for pitch count: `(\d+)\s+pitch` — if not present in the full string, treat as 1 pitch for roped routes, 0 for boulders.
 
 ### `routes/routes_<CRAG>_<YYYYMMDD>.csv`
 

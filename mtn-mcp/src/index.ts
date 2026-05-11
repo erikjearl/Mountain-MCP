@@ -10,9 +10,10 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { tickToolDefinitions, handleAnalyzeClimberTicks, handleTopRoutes } from "./tools/ticks.js";
-import { routeToolDefinitions, handleRouteInfo, handleFindRoutes, handleListCrags } from "./tools/routes.js";
+import { tickToolDefinitions, handleClimberProfile, handleTopRoutes } from "./tools/ticks.js";
+import { routeToolDefinitions, handleCragOverview, handleAreaBreakdown, handleRouteInfo, handleFindRoutes, handleListCrags } from "./tools/routes.js";
 import { gearToolDefinitions, handleSuggestGear } from "./tools/gear.js";
+import { betaToolDefinitions, handleRouteBeta } from "./tools/beta.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,6 +30,7 @@ const allTools = [
   ...tickToolDefinitions,
   ...routeToolDefinitions,
   ...gearToolDefinitions,
+  ...betaToolDefinitions,
 ];
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -42,12 +44,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   let text: string;
   try {
     switch (name) {
-      case "analyze_climber_ticks": text = handleAnalyzeClimberTicks(a); break;
+      case "climber_profile":        text = handleClimberProfile(a); break;
       case "top_routes":            text = handleTopRoutes(a); break;
+      case "crag_overview":         text = handleCragOverview(a); break;
+      case "area_breakdown":        text = handleAreaBreakdown(a); break;
       case "route_info":            text = handleRouteInfo(a); break;
       case "find_routes":           text = handleFindRoutes(a); break;
       case "list_crags":            text = handleListCrags(); break;
       case "suggest_gear":          text = handleSuggestGear(a); break;
+      case "route_beta":            text = handleRouteBeta(a); break;
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }

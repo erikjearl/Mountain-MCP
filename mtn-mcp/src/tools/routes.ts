@@ -1,6 +1,40 @@
-import { loadRoutes, loadAreas, loadTicks, availableCrags } from "../data-loader.js";
+import { loadRoutes, loadAreas, loadTicks, availableCrags, ydsToNum, vGradeToNum, parseDateFromTick } from "../data-loader.js";
 
 export const routeToolDefinitions = [
+  {
+    name: "crag_overview",
+    description:
+      "High-level summary of a crag: total routes by type, grade distribution, " +
+      "most-ticked routes, busiest months, most active climbers, and traffic by wall. " +
+      "Use this as the entry point when a climber wants to learn about an area.",
+    inputSchema: {
+      type: "object",
+      required: ["crag"],
+      properties: {
+        crag: {
+          type: "string",
+          description: "Crag key, e.g. TAHQUITZ, JTREE_CENTRAL, MISSION_GORGE",
+        },
+      },
+    },
+  },
+  {
+    name: "area_breakdown",
+    description:
+      "List all walls/sub-areas at a crag, ranked by tick count. Shows route count, " +
+      "dominant type, grade range, and total ticks per wall. " +
+      "Use when a climber wants to know which sector to visit.",
+    inputSchema: {
+      type: "object",
+      required: ["crag"],
+      properties: {
+        crag: {
+          type: "string",
+          description: "Crag key, e.g. TAHQUITZ, JTREE_CENTRAL, MISSION_GORGE",
+        },
+      },
+    },
+  },
   {
     name: "route_info",
     description:
@@ -146,4 +180,176 @@ export function handleListCrags(): string {
   const crags = availableCrags();
   if (crags.length === 0) return "No crag data found in mtn-data/.";
   return `Available crags:\n${crags.map((c) => `  ${c}`).join("\n")}`;
+}
+
+export function handleCragOverview(args: Record<string, unknown>): string {
+  const crag = args.crag as string;
+
+  const routes = loadRoutes(crag);
+  const areas = Object.fromEntries(loadAreas(crag).map((a) => [a.AreaID, a]));
+  const ticks = loadTicks(crag);
+
+  // Tick counts per route
+  const tickCounts: Record<string, number> = {};
+  for (const t of ticks) tickCounts[t.Route] = (tickCounts[t.Route] ?? 0) + 1;
+
+  // Route type breakdown
+  const typeCounts: Record<string, number> = {};
+  for (const r of routes) {
+    typeCounts[r.Type] = (typeCounts[r.Type] ?? 0) + 1;
+  }
+
+  // Grade distribution (rock and boulder separate)
+  const rockBuckets: Record<string, number> = {
+    "5.7-": 0, "5.8-5.9": 0, "5.10": 0, "5.11": 0, "5.12": 0, "5.13+": 0,
+  };
+  const boulderBuckets: Record<string, number> = {
+    "VB-V2": 0, "V3-V5": 0, "V6-V8": 0, "V9+": 0,
+  };
+  for (const r of routes) {
+    if (r.Type.includes("Boulder")) {
+      const v = vGradeToNum(r.Grade);
+      if (v <= 2) boulderBuckets["VB-V2"]++;
+      else if (v <= 5) boulderBuckets["V3-V5"]++;
+      else if (v <= 8) boulderBuckets["V6-V8"]++;
+      else boulderBuckets["V9+"]++;
+    } else {
+      const n = ydsToNum(r.Grade);
+      if (n < 8) rockBuckets["5.7-"]++;
+      else if (n < 10) rockBuckets["5.8-5.9"]++;
+      else if (n < 11) rockBuckets["5.10"]++;
+      else if (n < 12) rockBuckets["5.11"]++;
+      else if (n < 13) rockBuckets["5.12"]++;
+      else rockBuckets["5.13+"]++;
+    }
+  }
+
+  // Top 5 routes
+  const top5 = [...routes]
+    .sort((a, b) => (tickCounts[b.Route] ?? 0) - (tickCounts[a.Route] ?? 0))
+    .slice(0, 5)
+    .map((r) => `  ${r.Name} (${r.Grade} ${r.Type}) — ${tickCounts[r.Route] ?? 0} ticks`);
+
+  // Busiest months
+  const monthCounts: Record<string, number> = {};
+  for (const t of ticks) {
+    const d = parseDateFromTick(t.Date);
+    if (d) {
+      const key = d.toLocaleString("default", { month: "short" });
+      monthCounts[key] = (monthCounts[key] ?? 0) + 1;
+    }
+  }
+  const busyMonths = Object.entries(monthCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([m, c]) => `${m} (${c})`);
+
+  // Most active climbers
+  const climberCounts: Record<string, number> = {};
+  for (const t of ticks) climberCounts[t.Name] = (climberCounts[t.Name] ?? 0) + 1;
+  const topClimbers = Object.entries(climberCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, c]) => `  ${name}: ${c} ticks`);
+
+  // Traffic by wall
+  const wallCounts: Record<string, number> = {};
+  const routeMap = Object.fromEntries(routes.map((r) => [r.Route, r]));
+  for (const t of ticks) {
+    const r = routeMap[t.Route];
+    if (r) {
+      const name = areas[r.AreaID]?.Name ?? "Unknown";
+      wallCounts[name] = (wallCounts[name] ?? 0) + 1;
+    }
+  }
+  const topWalls = Object.entries(wallCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([w, c]) => `  ${w}: ${c} ticks`);
+
+  const uniqueClimbers = Object.keys(climberCounts).length;
+
+  const typeLines = Object.entries(typeCounts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([t, c]) => `  ${t}: ${c}`)
+    .join("\n");
+
+  const rockLines = Object.entries(rockBuckets)
+    .filter(([, c]) => c > 0)
+    .map(([g, c]) => `  ${g.padEnd(10)} ${c}`)
+    .join("\n");
+
+  const boulderLines = Object.entries(boulderBuckets)
+    .filter(([, c]) => c > 0)
+    .map(([g, c]) => `  ${g.padEnd(10)} ${c}`)
+    .join("\n");
+
+  const hasBoulders = Object.values(boulderBuckets).some((c) => c > 0);
+
+  return [
+    `Crag Overview: ${crag}`,
+    "─".repeat(50),
+    `Routes: ${routes.length}  |  Total ticks: ${ticks.length}  |  Unique climbers: ${uniqueClimbers}`,
+    `\nRoute types:\n${typeLines}`,
+    `\nRock grade distribution:\n${rockLines}`,
+    hasBoulders ? `\nBoulder grade distribution:\n${boulderLines}` : "",
+    `\nTop 5 most-ticked routes:\n${top5.join("\n")}`,
+    busyMonths.length > 0 ? `\nBusiest months: ${busyMonths.join(", ")}` : "",
+    topWalls.length > 0 ? `\nBusiest walls:\n${topWalls.join("\n")}` : "",
+    topClimbers.length > 0 ? `\nMost active climbers:\n${topClimbers.join("\n")}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+export function handleAreaBreakdown(args: Record<string, unknown>): string {
+  const crag = args.crag as string;
+
+  const routes = loadRoutes(crag);
+  const areas = Object.fromEntries(loadAreas(crag).map((a) => [a.AreaID, a]));
+  const ticks = loadTicks(crag);
+
+  const tickCounts: Record<string, number> = {};
+  for (const t of ticks) tickCounts[t.Route] = (tickCounts[t.Route] ?? 0) + 1;
+
+  // Group routes by immediate parent area
+  const areaRoutes: Record<string, typeof routes> = {};
+  for (const r of routes) {
+    if (!areaRoutes[r.AreaID]) areaRoutes[r.AreaID] = [];
+    areaRoutes[r.AreaID].push(r);
+  }
+
+  const areaStats = Object.entries(areaRoutes).map(([areaId, aRoutes]) => {
+    const area = areas[areaId];
+    const totalTicks = aRoutes.reduce((sum, r) => sum + (tickCounts[r.Route] ?? 0), 0);
+    const types = [...new Set(aRoutes.flatMap((r) => r.Type.split(",").map((t) => t.trim())))];
+    const rockGrades = aRoutes
+      .filter((r) => !r.Type.includes("Boulder"))
+      .map((r) => ({ grade: r.Grade, num: ydsToNum(r.Grade) }))
+      .filter((g) => g.num > 0)
+      .sort((a, b) => a.num - b.num);
+    const gradeRange =
+      rockGrades.length > 0
+        ? `${rockGrades[0].grade}–${rockGrades[rockGrades.length - 1].grade}`
+        : "V-scale";
+    return {
+      name: area?.Name ?? `Area ${areaId}`,
+      routeCount: aRoutes.length,
+      totalTicks,
+      types: types.join("/"),
+      gradeRange,
+    };
+  });
+
+  areaStats.sort((a, b) => b.totalTicks - a.totalTicks);
+
+  const lines = areaStats.slice(0, 25).map((a, i) =>
+    `${String(i + 1).padStart(2)}. ${a.name}\n` +
+    `    ${a.routeCount} routes | ${a.types} | ${a.gradeRange} | ${a.totalTicks} ticks`
+  );
+
+  return [
+    `Area Breakdown: ${crag}`,
+    "─".repeat(50),
+    `${areaStats.length} walls/sub-areas\n`,
+    ...lines,
+  ].join("\n");
 }

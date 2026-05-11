@@ -1,4 +1,4 @@
-import { loadRoutes, loadTicks } from "../data-loader.js";
+import { loadRoutes } from "../data-loader.js";
 
 export const gearToolDefinitions = [
   {

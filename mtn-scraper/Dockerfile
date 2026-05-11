@@ -28,6 +28,10 @@ RUN python -c "import asyncio; from pyppeteer.chromium_downloader import downloa
 
 COPY . .
 
+# Run as non-root so Chromium doesn't need --no-sandbox
+RUN useradd -m scraper && chown -R scraper /app
+USER scraper
+
 # Mount your data volume here; defaults to /mtn-proj-data inside the container
 ENV MTN_DATA_DIR=/mtn-proj-data
 

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: scrape-tahquitz
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 21600
+  template:
+    spec:
+      containers:
+      - name: scraper
+        image: mtn-scraper:latest
+        env:
+        - name: CRAG_NAME
+          value: "TAHQUITZ"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: data
+          mountPath: /mtn-proj-data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mtn-data-pvc
+      restartPolicy: Never
