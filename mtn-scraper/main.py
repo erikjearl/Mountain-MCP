@@ -44,7 +44,6 @@ CRAGS = {
 HARD_CODE_CRAG = 'MT_WOODSON'
 
 # Resolve which crag to scrape.
-# CRAG_ID + CRAG_NAME env vars let you target any crag without touching this file.
 # If only CRAG_NAME is set, it must be a key in the CRAGS dict above.
 # Examples:
 #   CRAG_NAME=YOSEMITE CRAG_ID=105833381   ← any crag, no code change needed

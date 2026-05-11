@@ -83,21 +83,30 @@ Boulder grades on Mountain Project appear as `V0`, `V3`, etc. in the `Grade` col
 
 ## Tick Styles
 
-A "tick" is a logged ascent of a route. The `Details` field in the ticks CSV begins with a style tag:
+A "tick" is a logged ascent of a route. The `Details` field in the ticks CSV is scraped from the Mountain Project stats page. Its actual format is:
+
+```
+Apr 21, 2026 ·  Lead / Redpoint. Cold day, bomber hand jams.
+Apr 4, 2026 · 4 pitches.  Lead / Onsight. Lead with Casey.
+Apr 18, 2026 • No names/notes
+```
+
+The date always appears first, followed by an optional pitch count, then the style tag. See `data-context.md` for the full format spec.
 
 | Style | Meaning |
 |---|---|
-| `Lead / Onsight` | First-ever attempt, no prior knowledge of moves, climbed clean (no falls, no rests). The highest achievement. |
-| `Lead / Flash` | Climbed clean on the first attempt but with prior knowledge (beta) — e.g., watched someone else climb it. |
+| `Lead / Onsight` | First-ever attempt, no prior knowledge of moves, climbed clean. The highest achievement. |
+| `Lead / Flash` | Climbed clean on the first attempt but with prior beta (watched someone else, got sequence). |
 | `Lead / Redpoint` | Climbed clean after prior attempts (falls allowed on earlier tries). |
-| `Lead / Pinkpoint` | Climbed clean with pre-placed gear (rare distinction that mainly applies to trad). |
+| `Lead / Pinkpoint` | Climbed clean with pre-placed gear (rare; mainly applies to trad). |
 | `Lead / Fell/Hung` | Led the route but fell or rested on the rope. Did not complete cleanly. |
+| `Lead` | Led the route; no sub-style specified. Common — thousands of ticks use this form. |
 | `TR` | Top-roped. Rope from above; falls immediately caught. |
-| `Follow` | Climbed second on a rope after the leader placed protection. Common on trad and multi-pitch routes. The follower removes ("cleans") the gear during the ascent. |
+| `Follow` | Climbed second on a rope after the leader placed protection. Common on trad and multi-pitch. |
 | `Solo` | Climbed alone with no rope. Extremely serious. |
 | `Boulder` | Bouldering ascent. |
 
-Multi-pitch ticks include `· X pitch` in the Details (e.g., `Lead / Redpoint. · 5 pitch`). The `parse_pitches()` function in `ticks_analysis.py` extracts pitch count from this field.
+Pitch count appears as `N pitches.` before the style tag in the Details string. Extract with regex `(\d+)\s+pitch` — matches anywhere in the string.
 
 ---
 

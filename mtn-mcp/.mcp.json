@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mtn-mcp": {
+      "command": "node",
+      "args": ["/home/eearl/Documents/github/mtn-proj/mtn-mcp/dist/index.js"]
+    }
+  }
+}
