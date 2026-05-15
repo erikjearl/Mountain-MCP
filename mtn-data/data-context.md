@@ -39,6 +39,18 @@ ticks  ────────────────────────�
 - **Routes** add metadata: grade, type, wall location, pitch count.
 - **Areas** add geographic grouping: which wall, which section of the crag.
 
+**What the ticks file alone cannot tell you** — for any of the following you must join to routes (and optionally areas):
+
+| Question | Requires |
+|---|---|
+| Is this route Trad, Sport, Boulder, or TR? | `routes.Type` |
+| What grade is this route? | `routes.Grade` |
+| How many pitches does this route have? | `routes.Pitches` |
+| Which wall or sub-area is this route on? | `routes.AreaID` → `areas.Name` |
+| What is the full geographic path (state → crag → wall)? | `routes.AreaID` → `areas.FullPath` |
+
+**Practical example:** If you open `ticks_BLACK_MOUNTAIN_20260514.csv` and want to know whether the activity is mostly bouldering or sport climbing, you cannot determine that from the ticks file. Load `routes_BLACK_MOUNTAIN_20260514.csv` and join on `Route` to get `Type` per tick. Then load `areas_BLACK_MOUNTAIN_20260514.csv` and join on `AreaID` to understand which wall each route sits on.
+
 ---
 
 ## Mountain Project URL Structure
