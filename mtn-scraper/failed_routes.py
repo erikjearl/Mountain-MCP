@@ -2,6 +2,7 @@ import csv
 import random
 import time
 from get_ticks import get_ticks
+from get_route_info import get_route_info
 
 def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
     """
@@ -48,6 +49,51 @@ def handle_failed_routes(failed_urls, csv_file, max_retries=5, sleep_time=10):
         print("\nNo new ticks found to append.")
 
     return still_failed_urls
+
+
+def handle_failed_route_info(failed_urls, routes_csv_file, areas_seen, max_retries=5, sleep_time=10):
+    """
+    Retries get_route_info for URLs that failed in the main loop.
+    Appends recovered route rows to routes_csv_file and updates areas_seen in-place.
+    Returns list of URLs still failing after all retries.
+    """
+    new_rows = []
+    still_failed = []
+
+    for i, url in enumerate(failed_urls):
+        print(f"Retrying route info {i+1}/{len(failed_urls)}: {url}")
+        attempt = 1
+        success = False
+
+        while attempt <= max_retries:
+            try:
+                route_row, areas = get_route_info(url)
+                for area in areas:
+                    areas_seen.setdefault(area[0], area)
+                new_rows.append(route_row)
+                success = True
+                break
+            except Exception as e:
+                print(f"  -Attempt {attempt} failed: {e}")
+
+            actual_sleep = random.uniform(sleep_time - 2, sleep_time + 2)
+            print(f"  Waiting {actual_sleep:.1f} seconds before the next attempt...")
+            time.sleep(actual_sleep)
+            attempt += 1
+
+        if not success:
+            print(f"  -ERROR! Still cannot scrape route info for: {url}")
+            still_failed.append(url)
+
+    if new_rows:
+        with open(routes_csv_file, "a", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerows(new_rows)
+        print(f"\nAppended {len(new_rows)} route info rows to {routes_csv_file}.")
+    else:
+        print("\nNo route info recovered in retry pass.")
+
+    return still_failed
 
 
 if __name__ == "__main__":

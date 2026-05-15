@@ -12,9 +12,9 @@ Scrapes Mountain Project (mountainproject.com) to collect **ticks** — records 
 mtn-scraper/          ← Python scraper (headless Chromium, BS4)
   main.py             ← orchestrator: resolves crag, runs pipeline, writes CSVs
   get_routes.py       ← stage 1: discover route stats URLs from crag ID
-  get_route_info.py   ← stage 2: fetch route metadata (name, grade, type, areas)
+  get_route_info.py   ← stage 2: fetch route metadata (name, grade, type, length, pitches, areas)
   get_ticks.py        ← stage 3: JS-render stats pages, parse tick rows
-  failed_routes.py    ← second-pass retry for URLs that failed in main loop
+  failed_routes.py    ← second-pass retry for both ticks and route info that failed in main loop
   requirements.txt
   Dockerfile / .dockerignore
   tools/
@@ -136,7 +136,7 @@ Edit the hardcoded URL in the `if __name__ == '__main__'` block of whichever fil
 
 ### Rate limiting
 
-`SLEEP_TIME` in `main.py` controls the sleep between tick-scrape attempts (default: 3s with ±2s jitter). The failed-URL retry pass uses `SLEEP_TIME * 2`. Route info fetches (plain HTTP) don't sleep on success — the JS render of the following ticks fetch provides natural delay.
+`SLEEP_TIME` in `main.py` controls the sleep between tick-scrape attempts (default: 3s with ±2s jitter). Both second-pass retry functions use `SLEEP_TIME * 2`. Route info fetches (plain HTTP) don't sleep on success during the main loop — the JS render of the following ticks fetch provides natural delay.
 
 ### Architecture
 
@@ -144,11 +144,11 @@ Four pipeline stages:
 
 1. **`get_routes.py`** — Queries the Mountain Project route-finder API twice (rock + boulder) for a crag ID, paginates until no new routes appear, returns deduplicated `/route/stats/` URLs.
 
-2. **`get_route_info.py`** — Converts stats URL → route URL, fetches with plain `requests` (server-rendered). Parses name, grade, type, length, and the area breadcrumb hierarchy.
+2. **`get_route_info.py`** — Converts stats URL → route URL, fetches with plain `requests` (server-rendered). Extracts route ID from the stats URL. Parses name, grade, type, length, pitch count, and the area breadcrumb hierarchy.
 
 3. **`get_ticks.py`** — JS-renders the stats page with `requests_html` + pyppeteer. Parses `<tr id="ticks.*">` rows, extracts username, date, and the details div.
 
-4. **`main.py`** — For each URL: fetch route info (3 attempts), then fetch ticks (3 attempts, jittered sleep). Flushes ticks and routes CSVs after each route. Collects areas in a deduplicating dict, writes the areas CSV after the loop. Hands failing tick URLs to `failed_routes.py` for a second pass.
+4. **`main.py`** — For each URL: fetch route info (3 attempts), then fetch ticks (3 attempts, jittered sleep). Flushes ticks and routes CSVs after each route. After the main loop: runs a second-pass retry for failed route info (`handle_failed_route_info`), then a second-pass retry for failed ticks (`handle_failed_routes`). Writes areas CSV after both retry passes so any recovered routes' areas are included.
 
 ### Crag IDs
 

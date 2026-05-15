@@ -35,10 +35,10 @@ def _parse_breadcrumb(soup):
     return areas
 
 
-def parse_route_page(html_str, route_slug):
+def parse_route_page(html_str, route_slug, route_id=''):
     """
     Parses a Mountain Project route page and returns:
-      route_row: (slug, name, grade, type, length, area_id)
+      route_row: (slug, route_id, name, grade, type, length, pitches, area_id)
       areas:     list of (area_id, name, parent_id, full_path) from breadcrumb
     area_id in route_row is the route's immediate parent area.
     """
@@ -67,38 +67,54 @@ def parse_route_page(html_str, route_slug):
                     grade = text
                     break
 
-    # Type and length from the description-details table
-    # The Type cell contains combined info, e.g. "Trad, 100 ft (30 m)"
+    # Type, length, and pitch count from the description-details table.
+    # The Type cell combines all three, e.g.:
+    #   "Trad, 500 ft (152 m), 4 pitches"  — length + pitches
+    #   "Trad, 4 pitches"                   — pitches, no length
+    #   "Trad, 130 ft (39 m)"               — length, no pitches (single pitch)
+    #   "Sport"                              — neither (single pitch)
+    # Pitch count defaults to 1 when not stated (single-pitch routes and boulders).
     route_type = ''
     length = ''
+    pitches = 1
     desc_table = soup.find('table', class_='description-details')
     if desc_table:
         for row in desc_table.find_all('tr'):
             tds = row.find_all('td')
             if len(tds) >= 2 and 'Type:' in tds[0].get_text():
                 type_cell = tds[1].get_text(strip=True)
+
                 length_match = re.search(r'(\d[\d,]*)\s*ft', type_cell)
                 if length_match:
                     length = length_match.group(0)
-                route_type = re.sub(r',?\s*\d[\d,]*\s*ft.*', '', type_cell).strip()
+
+                pitch_match = re.search(r'(\d+)\s+pitches?', type_cell)
+                if pitch_match:
+                    pitches = int(pitch_match.group(1))
+
+                # Strip length and pitch count independently so neither bleeds into type.
+                cleaned = re.sub(r',?\s*\d[\d,]*\s*ft[^,]*', '', type_cell)
+                cleaned = re.sub(r',?\s*\d+\s+pitches?', '', cleaned)
+                route_type = cleaned.strip().strip(',').strip()
                 break
 
     # Area hierarchy from breadcrumb — last entry is the route's immediate parent
     areas = _parse_breadcrumb(soup)
     area_id = areas[-1][0] if areas else ''
 
-    route_row = (route_slug, name, grade, route_type, length, area_id)
+    route_row = (route_slug, route_id, name, grade, route_type, length, pitches, area_id)
     return route_row, areas
 
 
 def get_route_info(stats_url):
     route_url = stats_url.replace('/route/stats/', '/route/')
     route_slug = stats_url.rsplit('/', 1)[-1]
+    route_id = stats_url.split('/')[-2]
 
     r = requests.get(route_url, timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
     r.raise_for_status()
 
-    return parse_route_page(r.text, route_slug)
+    return parse_route_page(r.text, route_slug, route_id)
 
 
 if __name__ == '__main__':
@@ -108,9 +124,9 @@ if __name__ == '__main__':
     ]
     for url in test_urls:
         route_row, areas = get_route_info(url)
-        slug, name, grade, rtype, length, area_id = route_row
+        slug, route_id, name, grade, rtype, length, pitches, area_id = route_row
         print(f"\n{name}")
-        print(f"  slug={slug}  grade={grade}  type={rtype}  length={length}  area_id={area_id}")
+        print(f"  slug={slug}  id={route_id}  grade={grade}  type={rtype}  length={length}  pitches={pitches}  area_id={area_id}")
         print("  Area hierarchy:")
         for a in areas:
             print(f"    {a[0]:>12}  {a[3]}")

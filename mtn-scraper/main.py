@@ -7,7 +7,7 @@ from datetime import datetime
 from get_routes import get_routes
 from get_ticks import get_ticks
 from get_route_info import get_route_info
-from failed_routes import handle_failed_routes
+from failed_routes import handle_failed_routes, handle_failed_route_info
 
 # CRAG IDS
 CRAGS = {
@@ -26,6 +26,9 @@ CRAGS = {
     "SOUTH_BAY": 124936699,
     "NW_BAY": 124936802,
     "EAST_BAY": 124936753,
+    "LOVERS_LEAP": 105733959,
+    "YOSEMITE_VALLEY": 105833388,
+    "BISHOP": 106064825,
 
     # AZ
     "ATLANTIS": 105792118,
@@ -41,7 +44,7 @@ CRAGS = {
 }
 
 # Quick local override — set this to any key from CRAGS to run without env vars
-HARD_CODE_CRAG = 'MT_WOODSON'
+HARD_CODE_CRAG = 'LOVERS_LEAP'
 
 # Resolve which crag to scrape.
 # If only CRAG_NAME is set, it must be a key in the CRAGS dict above.
@@ -100,7 +103,7 @@ with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
     ticks_writer.writerow(["Route", "Name", "Date", "Details"])
 
     routes_writer = csv.writer(routes_f)
-    routes_writer.writerow(["Route", "Name", "Grade", "Type", "Length", "AreaID"])
+    routes_writer.writerow(["Route", "RouteID", "Name", "Grade", "Type", "Length", "Pitches", "AreaID"])
 
     for i, url in enumerate(route_urls):
         print(f"Scraping route {i+1}/{len(route_urls)}: {url}")
@@ -155,41 +158,55 @@ with open(ticks_csv_file, "w", newline="", encoding="utf-8") as ticks_f, \
 print(f"Wrote {total_routes} rows to {routes_csv_file}.")
 print(f"Wrote {total_ticks} rows to {ticks_csv_file}.")
 
-# Write areas CSV — collected across all routes, deduplicated by area_id
+## RETRY FAILED ROUTE INFO
+if failed_route_info_urls:
+    print("\nFailed route info URLs:")
+    for url in failed_route_info_urls:
+        print(f"  {url}")
+
+    print("\nRetrying failed route info...")
+    time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
+    failed_route_info_urls = handle_failed_route_info(
+        failed_route_info_urls, routes_csv_file, areas_seen, sleep_time=(SLEEP_TIME * 2)
+    )
+
+    if failed_route_info_urls:
+        print("\nStill failing route info:")
+        for url in failed_route_info_urls:
+            print(f"  {url}")
+    else:
+        print("\nAll route info successfully scraped.")
+
+else:
+    print("\nAll route info scraped successfully.")
+
+## RETRY FAILED TICKS
+if failed_urls:
+    print("\nFailed tick URLs:")
+    for url in failed_urls:
+        print(f"  {url}")
+
+    print("\nRetrying failed ticks...")
+    time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
+    failed_urls = handle_failed_routes(failed_urls, ticks_csv_file, sleep_time=(SLEEP_TIME * 2))
+
+    if failed_urls:
+        print("\nStill failing tick URLs:")
+        for url in failed_urls:
+            print(f"  {url}")
+    else:
+        print("\nAll failed tick URLs successfully scraped.")
+
+else:
+    print("\nNo tick URLs failed.")
+
+# Write areas CSV after both retry passes so any recovered routes' areas are included
 with open(areas_csv_file, "w", newline="", encoding="utf-8") as areas_f:
     areas_writer = csv.writer(areas_f)
     areas_writer.writerow(["AreaID", "Name", "ParentID", "FullPath"])
     for area in areas_seen.values():
         areas_writer.writerow(area)
 print(f"Wrote {len(areas_seen)} rows to {areas_csv_file}.")
-
-
-## HANDLE FAILED URLS
-if failed_urls:
-    print("\nFailed URLs")
-    for failed_url in failed_urls:
-        print(f"  {failed_url}")
-
-    print("\nRetrying failed URLs...")
-    time.sleep(random.uniform(SLEEP_TIME - 2, SLEEP_TIME + 2))
-    failed_urls = handle_failed_routes(failed_urls, ticks_csv_file, sleep_time=(SLEEP_TIME * 2))
-
-    if failed_urls:
-        print("\nStill failing URLs")
-        for failed_url in failed_urls:
-            print(f"  {failed_url}")
-    else:
-        print("\nAll failed URLs successfully scraped.")
-
-else:
-    print("\nNo URLs failed")
-
-if failed_route_info_urls:
-    print("\nRoutes with missing info (route page could not be scraped):")
-    for url in failed_route_info_urls:
-        print(f"  {url}")
-else:
-    print("\nAll route info scraped successfully.")
 
 if failed_urls or failed_route_info_urls:
     raise SystemExit(1)
