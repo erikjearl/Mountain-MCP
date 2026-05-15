@@ -88,10 +88,9 @@ def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_da
 
     date_range = ""
     fmt = lambda d: d.strftime('%b %d, %Y')
-    if start_date and end_date:
-        date_range = f" ({fmt(start_date)} – {fmt(end_date)})"
-    elif start_date:
-        date_range = f" (from {fmt(start_date)})"
+    if start_date:
+        display_end = end_date if end_date else datetime.now()
+        date_range = f" ({fmt(start_date)} to {fmt(display_end)})"
     elif end_date:
         date_range = f" (through {fmt(end_date)})"
     print(f"\n~~ Top {top_n} Climbers{date_range} ~~")
@@ -128,5 +127,11 @@ if __name__ == "__main__":
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
     if end_date:
         end_date = datetime.strptime(end_date, "%Y-%m-%d")
+    else:
+        scrape_date_str = os.path.basename(ticks_file).rsplit("_", 1)[-1].replace(".csv", "")
+        try:
+            end_date = datetime.strptime(scrape_date_str, "%Y%m%d")
+        except ValueError:
+            end_date = datetime.now()
 
     analyze_climbers([ticks_file], routes_file, top_n, start_date, end_date)
