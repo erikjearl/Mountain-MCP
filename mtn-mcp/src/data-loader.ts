@@ -16,12 +16,14 @@ export interface Tick {
 }
 
 export interface Route {
-  Route: string;   // URL slug (PK)
-  Name: string;    // Full route name
-  Grade: string;   // "5.10b" or "V3"
-  Type: string;    // "Trad", "Sport", "Boulder", "TR", "Trad, Sport"
-  Length: string;  // "100 ft" or "" for boulders
-  AreaID: string;  // Numeric area ID as string
+  Route: string;    // URL slug (PK)
+  RouteID: string;  // Numeric MP route ID, e.g. "105722065"
+  Name: string;     // Full route name
+  Grade: string;    // "5.10b" or "V3"
+  Type: string;     // "Trad", "Sport", "Boulder", "TR", "Trad, Sport"
+  Length: string;   // "100 ft" or "" for boulders
+  Pitches: string;  // Number of pitches as string, defaults to "1"
+  AreaID: string;   // Numeric area ID as string
 }
 
 export interface Area {
