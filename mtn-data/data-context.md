@@ -214,13 +214,48 @@ One row per unique area encountered across all routes in the crag. A crag with 3
 
 ---
 
+## Ready-Made Analysis Scripts
+
+Rather than querying the CSVs directly, use the scripts in `mtn-scraper/tools/`. All scripts accept a crag key (e.g. `TAHQUITZ`, `BLACK_MOUNTAIN`) as a CLI argument, auto-locate the latest CSVs, and support date filtering via `start_date` / `end_date` variables at the bottom of each file.
+
+### Which script to run
+
+| Goal | Script | What it produces |
+|---|---|---|
+| Understand which routes are popular at a crag, broken down by wall | `route_analysis.py` | Top N routes grouped by area, ranked by combined tick count. Shows grade, type, pitch count, unique climbers, and send rate per route. |
+| Understand who the most active climbers are | `climber_analysis.py` | Top N climbers ranked by tick count and total pitches climbed (using route-level pitch count from the routes CSV). |
+| Quick combined overview of both routes and climbers | `ticks_analysis.py` | Simpler combined output: top routes and top climbers side-by-side. Less detail than the dedicated scripts. |
+
+### How to run
+
+```bash
+cd mtn-scraper
+
+# Which routes are popular at Black Mountain, grouped by wall?
+python tools/route_analysis.py BLACK_MOUNTAIN
+
+# Who are the most active climbers at Tahquitz this year?
+python tools/climber_analysis.py TAHQUITZ
+
+# Quick overview of Joshua Tree Hidden Valley
+python tools/ticks_analysis.py ../mtn-data/ticks/ticks_JTREE_HV_<DATE>.csv
+```
+
+Edit `start_date`, `end_date`, and `top_n` directly in the `if __name__ == "__main__"` block of each script before running.
+
+### What each script loads
+
+`route_analysis.py` and `climber_analysis.py` auto-load all three CSVs (ticks + routes + areas) for the given crag — you do not need to specify file paths. `ticks_analysis.py` takes explicit file paths and optionally accepts a routes CSV for name resolution.
+
+---
+
 ## Key Caveats and Data Limitations
 
 **Ticks are self-reported.** Not every climber logs ascents on Mountain Project. Tick counts undercount real traffic. Relative comparisons (route A vs. route B) are more reliable than absolute counts.
 
 **Popular routes are capped at ~250 ticks per scrape.** Mountain Project's stats page renders a limited number of ticks before requiring a scroll or pagination action. The scraper captures the initial render only, so any route with more than ~250 ticks in the dataset is almost certainly truncated. The ticks collected are the most recent ones (Mountain Project displays newest-first). Approximately 7% of routes in the current dataset hit this ceiling. Historical tick data for high-traffic routes is incomplete.
 
-**Private ticks are excluded.** Mountain Project allows private ticks that don't appear on the public stats page. The scraper cannot see them.
+**Private ticks appear as `Private Tick`.** Mountain Project allows climbers to mark ticks as private. These ticks are still scraped and included in the data, but the climber's real username is hidden — they appear with `Name = "Private Tick"`. This is a Mountain Project placeholder, not a real person. When analyzing climbers, exclude or call out `Private Tick` rows — all private ticks from any number of different climbers are collapsed into this single fake name, so treating it as a single user will produce meaningless results.
 
 **Route slug collisions across crags.** The `Route` slug is unique within a crag but not globally. Always scope joins to a single crag's CSV set.
 

@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     crag = sys.argv[1].upper()
     top_n = 25
-    start_date = "2026-01-01"   # e.g. "2026-01-01"
+    start_date = "2025-01-01"   # e.g. "2026-01-01"
     end_date = None     # e.g. "2026-12-31"
 
     ticks_file = find_latest("ticks", "ticks", crag)

@@ -9,6 +9,9 @@ from get_ticks import get_ticks
 from get_route_info import get_route_info
 from failed_routes import handle_failed_routes, handle_failed_route_info
 
+# SELECT CRAG TO SCRAPE
+HARD_CODE_CRAG = 'MT_WOODSON'
+
 # CRAG IDS
 CRAGS = {
     # SO CAL
@@ -18,6 +21,7 @@ CRAGS = {
     "EL_CAJON_MTN": 105793290,
     "BLACK_MOUNTAIN": 105991127,
     "HOLCOMB": 105805238,
+    "MONKEY_FACE": 125451206,
     "MALIBU_CREEK": 105870845,
     "TAHQUITZ": 105788031,
     "SUICIDE_ROCK": 105788036,
@@ -47,9 +51,6 @@ CRAGS = {
     "THE_NEW": 106040788,
     "GUNKS": 105798167,
 }
-
-# Quick local override — set this to any key from CRAGS to run without env vars
-HARD_CODE_CRAG = 'BLACK_MOUNTAIN'
 
 # Resolve which crag to scrape.
 # If only CRAG_NAME is set, it must be a key in the CRAGS dict above.
