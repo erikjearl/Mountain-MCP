@@ -109,15 +109,26 @@ kubectl apply -f mtn-scraper/deployments/job-tahquitz.yaml
 
 To scrape a crag not in the pre-made YAMLs, copy any job file and set `CRAG_NAME` (+ `CRAG_ID` if needed) in the env section.
 
-### Analyzing tick data (standalone CLI)
+### Standalone analysis CLIs (tools/)
 
+Three scripts in `tools/` — each takes a crag name, auto-finds the latest CSVs, and prints results to stdout. Edit `start_date`, `end_date`, and `top_n` directly in the `if __name__ == "__main__"` block of whichever script you're running.
+
+**`route_analysis.py`** — top routes grouped by area, with tick count, pitch count, unique climbers, and send%. Takes a crag name:
 ```bash
 cd mtn-scraper
+python tools/route_analysis.py BLACK_MOUNTAIN
+```
+
+**`climber_analysis.py`** — top climbers by tick count and pitch count. Takes a crag name:
+```bash
+python tools/climber_analysis.py BLACK_MOUNTAIN
+```
+
+**`ticks_analysis.py`** — simpler/older script: flat top-routes and top-climbers tables by tick/pitch count. Takes one or more tick CSV file paths directly (not a crag name). Set `routes_file` in the script to resolve route slugs to full names:
+```bash
 python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_<DATE>.csv
 python tools/ticks_analysis.py ../mtn-data/ticks/ticks_TAHQUITZ_<DATE>.csv ../mtn-data/ticks/ticks_MALIBU_CREEK_<DATE>.csv
 ```
-
-Prints top 20 routes and top 20 climbers by tick count and pitch count. Edit `start_date`, `end_date`, `top_n`, and `routes_file` directly in the `if __name__ == "__main__"` block at the bottom of the script. Set `routes_file` to the matching routes CSV to resolve slugs to full names.
 
 ### Scraping a single route (debugging)
 

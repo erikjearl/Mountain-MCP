@@ -10,7 +10,7 @@ from get_route_info import get_route_info
 from failed_routes import handle_failed_routes, handle_failed_route_info
 
 # SELECT CRAG TO SCRAPE
-HARD_CODE_CRAG = 'MT_WOODSON'
+HARD_CODE_CRAG = 'TAHQUITZ'
 
 # CRAG IDS
 CRAGS = {
