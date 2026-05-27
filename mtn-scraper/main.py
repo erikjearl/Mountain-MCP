@@ -1,5 +1,6 @@
 import csv
 import gc
+import glob
 import os
 import random
 import time
@@ -10,7 +11,7 @@ from get_route_info import get_route_info
 from failed_routes import handle_failed_routes, handle_failed_route_info
 
 # SELECT CRAG TO SCRAPE
-HARD_CODE_CRAG = 'TAHQUITZ'
+HARD_CODE_CRAG = 'BLACK_MOUNTAIN'
 
 # CRAG IDS
 CRAGS = {
@@ -216,3 +217,38 @@ print(f"Wrote {len(areas_seen)} rows to {areas_csv_file}.")
 
 if failed_urls or failed_route_info_urls:
     raise SystemExit(1)
+
+# Clean up older CSV files for this crag now that all three new files are confirmed good.
+# Only reached when there are zero permanent failures (SystemExit(1) guard above).
+# Verify every new file is present on disk and non-empty before touching anything old.
+new_files = {
+    "ticks":  ticks_csv_file,
+    "routes": routes_csv_file,
+    "areas":  areas_csv_file,
+}
+missing_or_empty = [
+    (label, path) for label, path in new_files.items()
+    if not os.path.exists(path) or os.path.getsize(path) == 0
+]
+if missing_or_empty:
+    print("\nWarning: skipping old-file cleanup — new file(s) missing or empty on disk:")
+    for label, path in missing_or_empty:
+        print(f"  {label}: {path}")
+else:
+    old_files = []
+    for pattern, subdir in [
+        (f"ticks_{crag_name}_????????.csv",  os.path.join(DATA_DIR, "ticks")),
+        (f"routes_{crag_name}_????????.csv", os.path.join(DATA_DIR, "routes")),
+        (f"areas_{crag_name}_????????.csv",  os.path.join(DATA_DIR, "routes", "areas")),
+    ]:
+        for path in glob.glob(os.path.join(subdir, pattern)):
+            if not path.endswith(f"_{date_stamp}.csv"):
+                old_files.append(path)
+
+    if old_files:
+        print("\nCleaning up older CSV files for this crag:")
+        for path in sorted(old_files):
+            os.remove(path)
+            print(f"  Deleted {os.path.relpath(path, DATA_DIR)}")
+    else:
+        print("\nNo older CSV files to clean up.")
