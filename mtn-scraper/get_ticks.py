@@ -1,6 +1,25 @@
 import asyncio
+import os
+import pyppeteer
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
+
+# pyppeteer's bundled Chromium is x86-only and crashes on Apple Silicon
+# ("Browser closed unexpectedly"). Point it at a system-installed Chrome/Chromium
+# instead. Override the path with PYPPETEER_EXECUTABLE_PATH; otherwise fall back to
+# macOS Google Chrome (a universal binary with a native arm64 slice).
+_CHROME_PATH = os.environ.get(
+    "PYPPETEER_EXECUTABLE_PATH",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+)
+if _CHROME_PATH and os.path.exists(_CHROME_PATH):
+    _orig_launch = pyppeteer.launch
+
+    def _launch_with_system_chrome(*args, **kwargs):
+        kwargs.setdefault("executablePath", _CHROME_PATH)
+        return _orig_launch(*args, **kwargs)
+
+    pyppeteer.launch = _launch_with_system_chrome
 
 # get 'main-content-container' from html
 def get_onx_stat_table_requests_html(url):
