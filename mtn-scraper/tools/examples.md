@@ -20,6 +20,12 @@ python tools/route_analysis.py PHANTOM_SPIRES
 python tools/route_analysis.py YOSEMITE_VALLEY_NORTH
 ```
 
+Add `--boulder` to only count boulder problems (any route whose Type includes `Boulder`). The table drops the pitches column in this mode:
+
+```bash
+python tools/route_analysis.py CASTLE_ROCK --boulder
+```
+
 Crag name is case-insensitive (`lovers_leap` works too). To change `top_n`, `start_date`, or `end_date`, edit the `if __name__ == "__main__"` block (currently `top_n=25`, `start_date="2026-01-01"`).
 
 ---

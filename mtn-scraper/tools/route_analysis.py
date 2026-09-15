@@ -26,7 +26,7 @@ def find_latest(subdir, prefix, crag):
 
 
 def load_routes(routes_file):
-    """Returns dict: slug → {name, grade, type, pitches, area_id}"""
+    """Returns dict: slug → {name, grade, type, types, pitches, area_id}"""
     if not routes_file or not os.path.exists(routes_file):
         if routes_file:
             print(f"Warning: routes file not found: {routes_file}")
@@ -45,6 +45,7 @@ def load_routes(routes_file):
                 'name': row.get('Name', row['Route']),
                 'grade': row.get('Grade', ''),
                 'type': row.get('Type', '').split(',')[0].strip(),
+                'types': {t.strip() for t in row.get('Type', '').split(',')},
                 'pitches': pitches,
                 'area_id': row.get('AreaID', ''),
             }
@@ -69,7 +70,7 @@ def parse_style(details):
     return None
 
 
-def analyze_routes(ticks_file, routes, areas, top_n=25, start_date=None, end_date=None):
+def analyze_routes(ticks_file, routes, areas, top_n=25, start_date=None, end_date=None, boulder_only=False):
     tick_counter = Counter()
     pitch_totals = defaultdict(int)
     unique_climbers = defaultdict(set)
@@ -91,6 +92,8 @@ def analyze_routes(ticks_file, routes, areas, top_n=25, start_date=None, end_dat
 
             slug = row['Route']
             meta = routes.get(slug, {})
+            if boulder_only and 'Boulder' not in meta.get('types', ()):
+                continue
             pitches = meta.get('pitches', 1)
             style = parse_style(row.get('Details', ''))
 
@@ -123,15 +126,21 @@ def analyze_routes(ticks_file, routes, areas, top_n=25, start_date=None, end_dat
     elif end_date:
         date_range = f" (through {fmt(end_date)})"
 
-    print(f"\n~~ Top {top_n} Routes by Area{date_range} ~~")
+    kind = "Boulders" if boulder_only else "Routes"
+    print(f"\n~~ Top {top_n} {kind} by Area{date_range} ~~")
 
     for area_id in area_order:
         group = area_groups[area_id]
         area_name = areas.get(area_id, area_id or "Unknown Area")
         area_ticks = sum(t for _, t in group)
-        print(f"\n[ {area_name} ]  {area_ticks} ticks · {len(group)} routes")
-        print(f"  {'Route (grade, type, pitches)':45} | {'Ticks':>5} | {'Pitches':>7} | {'Climbers':>8} | {'Send%':>5}")
-        print("  " + "-" * 85)
+        if boulder_only:
+            print(f"\n[ {area_name} ]  {area_ticks} ticks · {len(group)} problems")
+            print(f"  {'Problem (grade)':45} | {'Ticks':>5} | {'Climbers':>8} | {'Send%':>5}")
+            print("  " + "-" * 75)
+        else:
+            print(f"\n[ {area_name} ]  {area_ticks} ticks · {len(group)} routes")
+            print(f"  {'Route (grade, type, pitches)':45} | {'Ticks':>5} | {'Pitches':>7} | {'Climbers':>8} | {'Send%':>5}")
+            print("  " + "-" * 85)
         for slug, ticks in group:
             meta = routes.get(slug, {})
             name = meta.get('name', slug)
@@ -144,17 +153,24 @@ def analyze_routes(ticks_file, routes, areas, top_n=25, start_date=None, end_dat
             attempts = attempt_counts[slug]
             sends = send_counts[slug]
             send_pct = f"{100 * sends // attempts}%" if attempts > 0 else "—"
-            print(f"  {label[:45]:45} | {ticks:5} | {total_pitches:7} | {climbers:8} | {send_pct:>5}")
+            if boulder_only:
+                label = f"{name} ({grade})"
+                print(f"  {label[:45]:45} | {ticks:5} | {climbers:8} | {send_pct:>5}")
+            else:
+                print(f"  {label[:45]:45} | {ticks:5} | {total_pitches:7} | {climbers:8} | {send_pct:>5}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python tools/route_analysis.py <CRAG_NAME>")
+    boulder_only = '--boulder' in sys.argv
+    args = [a for a in sys.argv[1:] if a != '--boulder']
+    if not args:
+        print("Usage: python tools/route_analysis.py <CRAG_NAME> [--boulder]")
         print("  CRAG_NAME: e.g. TAHQUITZ, JTREE_HV, MISSION_GORGE")
+        print("  --boulder: only count ticks on boulder problems")
         print("  Edit top_n, start_date, end_date in this script.")
         sys.exit(1)
 
-    crag = sys.argv[1].upper()
+    crag = args[0].upper()
     top_n = 25
     start_date = "2026-01-01"
     end_date = None
@@ -188,8 +204,11 @@ if __name__ == "__main__":
     areas  = load_areas(areas_file)
 
     if not routes:
+        if boulder_only:
+            print("Error: --boulder needs a routes CSV to know which routes are boulders.")
+            sys.exit(1)
         print("Warning: no route metadata — grades, types, and pitches will not be shown.")
     if not areas:
         print("Warning: no areas data — area names will not be shown.")
 
-    analyze_routes(ticks_file, routes, areas, top_n, start_date, end_date)
+    analyze_routes(ticks_file, routes, areas, top_n, start_date, end_date, boulder_only)
