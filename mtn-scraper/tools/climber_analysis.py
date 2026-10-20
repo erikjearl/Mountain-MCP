@@ -17,16 +17,18 @@ def find_latest(subdir, prefix, crag):
 
 def load_route_pitches(routes_file):
     """
-    Loads a routes CSV and returns a dict mapping route slug → pitch count (int).
+    Loads a routes CSV and returns (pitches, boulders): a dict mapping route slug → pitch
+    count (int), and the set of slugs whose Type includes Boulder.
     Requires a routes CSV produced by the current scraper (must have a Pitches column).
-    Returns an empty dict if routes_file is None or not found.
+    Returns empty collections if routes_file is None or not found.
     """
     if not routes_file or not os.path.exists(routes_file):
         if routes_file:
             print(f"Warning: routes file not found: {routes_file}")
-        return {}
+        return {}, set()
 
     pitches = {}
+    boulders = set()
     with open(routes_file, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         has_pitches_col = 'Pitches' in (reader.fieldnames or [])
@@ -37,10 +39,12 @@ def load_route_pitches(routes_file):
                 pitches[row['Route']] = int(row['Pitches'])
             except (KeyError, ValueError):
                 pitches[row['Route']] = 1
-    return pitches
+            if 'Boulder' in {t.strip() for t in row.get('Type', '').split(',')}:
+                boulders.add(row['Route'])
+    return pitches, boulders
 
 
-def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_date=None):
+def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_date=None, boulder_only=False):
     """
     Counts ticks and pitches per climber across one or more ticks CSVs.
 
@@ -49,8 +53,14 @@ def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_da
     Details string, which is often absent or reflects a partial ascent.
 
     Falls back to 1 pitch per tick when the route is not found in the routes CSV.
+
+    With boulder_only, only ticks on routes whose Type includes Boulder are counted,
+    and the pitches column is omitted.
     """
-    route_pitches = load_route_pitches(routes_file)
+    route_pitches, boulders = load_route_pitches(routes_file)
+    if boulder_only and not route_pitches:
+        print("Error: --boulder needs a routes CSV to know which routes are boulders.")
+        return
     if not route_pitches:
         print("Warning: no route pitch data loaded — all ticks counted as 1 pitch.\n"
               "Set routes_file to the matching routes CSV for accurate pitch counts.")
@@ -78,6 +88,8 @@ def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_da
 
                 climber = row['Name']
                 route = row['Route']
+                if boulder_only and route not in boulders:
+                    continue
                 pitches = route_pitches.get(route, 1)
 
                 tick_counter[climber] += 1
@@ -93,6 +105,14 @@ def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_da
         date_range = f" ({fmt(start_date)} to {fmt(display_end)})"
     elif end_date:
         date_range = f" (through {fmt(end_date)})"
+    if boulder_only:
+        print(f"\n~~ Top {top_n} Boulderers{date_range} ~~")
+        print(f"{'Name':40} | {'Ticks':>5}")
+        print("-" * 50)
+        for climber, ticks in tick_counter.most_common(top_n):
+            print(f"{climber[:40]:40} | {ticks:5}")
+        return
+
     print(f"\n~~ Top {top_n} Climbers{date_range} ~~")
     print(f"{'Name':40} | {'Ticks':>5} | {'Pitches':>7}")
     print("-" * 60)
@@ -101,13 +121,16 @@ def analyze_climbers(ticks_files, routes_file, top_n=20, start_date=None, end_da
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python tools/climber_analysis.py <CRAG_NAME>")
+    boulder_only = '--boulder' in sys.argv
+    args = [a for a in sys.argv[1:] if a != '--boulder']
+    if not args:
+        print("Usage: python tools/climber_analysis.py <CRAG_NAME> [--boulder]")
         print("  CRAG_NAME: e.g. TAHQUITZ, JTREE_HV, MISSION_GORGE")
+        print("  --boulder: only count ticks on boulder problems")
         print("  Edit start_date, end_date, and top_n in this script.")
         sys.exit(1)
 
-    crag = sys.argv[1].upper()
+    crag = args[0].upper()
     top_n = 25
     start_date = "2026-01-01"   # e.g. "2026-01-01"
     end_date = None     # e.g. "2026-12-31"
@@ -134,4 +157,4 @@ if __name__ == "__main__":
         except ValueError:
             end_date = datetime.now()
 
-    analyze_climbers([ticks_file], routes_file, top_n, start_date, end_date)
+    analyze_climbers([ticks_file], routes_file, top_n, start_date, end_date, boulder_only)

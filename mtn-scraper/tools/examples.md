@@ -40,6 +40,12 @@ python tools/climber_analysis.py PHANTOM_SPIRES
 python tools/climber_analysis.py YOSEMITE_VALLEY_NORTH
 ```
 
+Add `--boulder` to rank climbers by boulder ticks only. The table drops the pitches column in this mode:
+
+```bash
+python tools/climber_analysis.py CASTLE_ROCK --boulder
+```
+
 Defaults: `top_n=25`, `start_date="2026-01-01"`. Edit the bottom of the script to change them.
 
 ---
