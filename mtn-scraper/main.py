@@ -27,6 +27,8 @@ CRAGS = {
     "NW_BAY": 124936802,
     "EAST_BAY": 124936753,
     "CASTLE_ROCK": 105733890,
+    "MT_HELENA": 105733881,
+    "MT_DIABLO": 105733896,
 
     # TAHOE
     "LOVERS_LEAP": 105733959,
@@ -58,7 +60,7 @@ CRAGS = {
 }
 
 # Quick local override — set this to any key from CRAGS to run without env vars
-HARD_CODE_CRAG = 'CASTLE_ROCK'
+HARD_CODE_CRAG = 'MT_DIABLO'
 
 # Resolve which crag to scrape.
 # If only CRAG_NAME is set, it must be a key in the CRAGS dict above.
